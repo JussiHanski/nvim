@@ -1080,10 +1080,10 @@ require('lazy').setup({
       })
 
       -- Add custom commands for IDE integration
-      -- Add command to send /ide with current file to Claude Code
-      vim.api.nvim_create_user_command('ClaudeIde', function()
-        -- Get the current file path
-        local filepath = vim.fn.expand('%:p')
+      -- Add command to add current file to Claude Code context with @
+      vim.api.nvim_create_user_command('ClaudeAddFile', function()
+        -- Get the current file path relative to cwd
+        local filepath = vim.fn.expand('%:.')
         if filepath == '' then
           vim.notify('No file open', vim.log.levels.WARN)
           return
@@ -1104,16 +1104,16 @@ require('lazy').setup({
           return
         end
 
-        -- Send /ide command with current file
+        -- Send @ command with current file
         local chan_id = vim.b[bufnr].terminal_job_id
         if chan_id then
-          vim.fn.chansend(chan_id, '/ide ' .. filepath .. '\n')
-          vim.notify('Sent current file to Claude Code', vim.log.levels.INFO)
+          vim.fn.chansend(chan_id, '@' .. filepath .. ' ')
+          vim.notify('Added file to context: ' .. filepath, vim.log.levels.INFO)
         end
-      end, { desc = 'Send current file to Claude Code with /ide' })
+      end, { desc = 'Add current file to Claude Code with @' })
 
-      -- Add command to send /ide with all open buffers
-      vim.api.nvim_create_user_command('ClaudeIdeAll', function()
+      -- Add command to add all open buffers to Claude Code context with @
+      vim.api.nvim_create_user_command('ClaudeAddAllFiles', function()
         local claude_code = require('claude-code')
         if not claude_code.claude_code or not claude_code.claude_code.instances then
           vim.notify('Claude Code not running. Start with <leader>cc first.', vim.log.levels.WARN)
@@ -1128,13 +1128,16 @@ require('lazy').setup({
           return
         end
 
-        -- Get all valid file buffers
+        -- Get all valid file buffers (relative paths)
+        local cwd = vim.fn.getcwd()
         local files = {}
         for _, buf in ipairs(vim.api.nvim_list_bufs()) do
           if vim.api.nvim_buf_is_loaded(buf) and vim.api.nvim_buf_get_option(buf, 'buftype') == '' then
             local filepath = vim.api.nvim_buf_get_name(buf)
             if filepath ~= '' and vim.fn.filereadable(filepath) == 1 then
-              table.insert(files, filepath)
+              -- Convert to relative path
+              local relpath = vim.fn.fnamemodify(filepath, ':.')
+              table.insert(files, '@' .. relpath)
             end
           end
         end
@@ -1144,17 +1147,17 @@ require('lazy').setup({
           return
         end
 
-        -- Send /ide command with all files
+        -- Send @ commands with all files
         local chan_id = vim.b[bufnr].terminal_job_id
         if chan_id then
-          vim.fn.chansend(chan_id, '/ide ' .. table.concat(files, ' ') .. '\n')
-          vim.notify('Sent ' .. #files .. ' file(s) to Claude Code', vim.log.levels.INFO)
+          vim.fn.chansend(chan_id, table.concat(files, ' ') .. ' ')
+          vim.notify('Added ' .. #files .. ' file(s) to context', vim.log.levels.INFO)
         end
-      end, { desc = 'Send all open buffers to Claude Code with /ide' })
+      end, { desc = 'Add all open buffers to Claude Code with @' })
 
-      -- Add keymaps for IDE commands
-      vim.keymap.set('n', '<leader>ci', '<cmd>ClaudeIde<cr>', { desc = '[C]laude [I]de - send current file' })
-      vim.keymap.set('n', '<leader>cI', '<cmd>ClaudeIdeAll<cr>', { desc = '[C]laude [I]de - send all open files' })
+      -- Add keymaps for adding files to context
+      vim.keymap.set('n', '<leader>ca', '<cmd>ClaudeAddFile<cr>', { desc = '[C]laude [A]dd current file (@)' })
+      vim.keymap.set('n', '<leader>cA', '<cmd>ClaudeAddAllFiles<cr>', { desc = '[C]laude [A]dd all open files (@)' })
     end,
     keys = {
       { '<leader>cc', '<cmd>ClaudeCode<cr>', desc = '[C]laude [C]ode Toggle', mode = 'n' },

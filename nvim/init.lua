@@ -90,8 +90,20 @@ P.S. You can delete this when you're done too. It's your config now! :)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
--- Disable default Neovim 0.11+ LSP keymaps (we set our own below)
-vim.g.lsp_default_maps = false
+-- Delete Neovim 0.11+ default LSP keymaps (they conflict with our custom ones)
+-- These are set globally by vim/_defaults.lua
+vim.api.nvim_create_autocmd('VimEnter', {
+  callback = function()
+    pcall(vim.keymap.del, 'n', 'grn')
+    pcall(vim.keymap.del, 'n', 'gra')
+    pcall(vim.keymap.del, 'x', 'gra')
+    pcall(vim.keymap.del, 'n', 'grr')
+    pcall(vim.keymap.del, 'n', 'gri')
+    pcall(vim.keymap.del, 'n', 'grd')
+    pcall(vim.keymap.del, 'n', 'grD')
+    pcall(vim.keymap.del, 'n', 'grt')
+  end,
+})
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
@@ -629,7 +641,9 @@ require('lazy').setup({
 
           -- Switch between header and source (clangd specific)
           if client and client.name == 'clangd' then
-            map('gh', '<cmd>ClangdSwitchSourceHeader<cr>', '[G]oto [H]eader/Source')
+            map('gh', function()
+              vim.cmd('ClangdSwitchSourceHeader')
+            end, '[G]oto [H]eader/Source')
           end
         end,
       })

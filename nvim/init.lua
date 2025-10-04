@@ -642,7 +642,10 @@ require('lazy').setup({
           -- Switch between header and source (clangd specific)
           if client and client.name == 'clangd' then
             map('gh', function()
-              vim.cmd('ClangdSwitchSourceHeader')
+              vim.lsp.buf.execute_command({
+                command = 'clangd.switchheadersource',
+                arguments = { vim.uri_from_bufnr(0) },
+              })
             end, '[G]oto [H]eader/Source')
           end
         end,

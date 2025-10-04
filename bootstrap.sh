@@ -8,7 +8,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-REPO_URL="https://github.com/<your-username>/nvim_config_tool.git"
+REPO_URL="git@github-personal:JussiHanski/nvim.git"
 INSTALL_DIR="$HOME/.config/nvim_config_tool"
 TOOL_SCRIPT="$INSTALL_DIR/scripts/nvim-tool.sh"
 
@@ -60,7 +60,6 @@ Usage: $0 <command>
 Commands:
     init        Initialize Neovim configuration (first-time setup)
     update      Update to latest configuration
-    push        Push local changes to remote repository
     clean       Remove configuration and restore backup
     status      Show configuration status
     help        Show this help message
@@ -75,7 +74,7 @@ main() {
     local command="${1:-help}"
 
     case "$command" in
-        init|update|push|clean|status)
+        init|update|clean|status)
             check_git
 
             # Clone repo if needed (for init command)

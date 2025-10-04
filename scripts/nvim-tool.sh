@@ -214,56 +214,6 @@ cmd_update() {
     git log --oneline -5
 }
 
-cmd_push() {
-    local commit_message="$1"
-
-    if [ -z "$commit_message" ]; then
-        print_error "Commit message required"
-        print_info "Usage: $0 push \"Your commit message\""
-        exit 1
-    fi
-
-    print_info "Preparing to push changes..."
-
-    cd "$REPO_DIR"
-
-    # Show status
-    print_info "Current status:"
-    git status --short
-
-    # Check if there are changes
-    if git diff-index --quiet HEAD -- && [ -z "$(git status --porcelain)" ]; then
-        print_warning "No changes to commit"
-        exit 0
-    fi
-
-    # Show diff
-    echo
-    print_info "Changes to be committed:"
-    git diff HEAD
-
-    echo
-    read -p "Commit and push these changes? (y/n): " -n 1 -r
-    echo
-
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_info "Push cancelled"
-        exit 0
-    fi
-
-    # Add all changes in nvim directory
-    git add nvim/
-
-    # Create commit
-    git commit -m "$commit_message"
-
-    # Push to remote
-    print_info "Pushing to remote..."
-    git push origin main
-
-    print_success "Changes pushed successfully!"
-}
-
 cmd_clean() {
     print_warning "This will remove the Neovim configuration symlink"
     read -p "Continue? (y/n): " -n 1 -r
@@ -342,12 +292,11 @@ show_help() {
     cat << EOF
 Neovim Configuration Tool
 
-Usage: $0 <command> [arguments]
+Usage: $0 <command>
 
 Commands:
     init                Initialize Neovim configuration (first-time setup)
     update              Update to latest configuration
-    push <message>      Push local changes to remote repository
     clean               Remove configuration and restore backup
     status              Show configuration status
     help                Show this help message
@@ -355,7 +304,6 @@ Commands:
 Examples:
     $0 init
     $0 update
-    $0 push "Added Go LSP configuration"
     $0 status
     $0 clean
 
@@ -377,9 +325,6 @@ main() {
             ;;
         update)
             cmd_update
-            ;;
-        push)
-            cmd_push "$@"
             ;;
         clean)
             cmd_clean

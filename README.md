@@ -15,7 +15,7 @@ Working on multiple machines means keeping Neovim configurations in sync is a pa
 
 ```bash
 # Download the bootstrap script
-curl -fsSL https://raw.githubusercontent.com/<your-username>/nvim_config_tool/main/bootstrap.sh -o bootstrap.sh
+curl -fsSL https://raw.githubusercontent.com/JussiHanski/nvim/main/bootstrap.sh -o bootstrap.sh
 
 # Initialize on your machine
 bash bootstrap.sh init
@@ -39,14 +39,6 @@ Or if you've already set up:
 ~/.config/nvim_config_tool/scripts/nvim-tool.sh update
 ```
 
-### Push Your Changes (Upstream to Repository)
-
-Made changes to your config? Push them so other machines can get them:
-
-```bash
-~/.config/nvim_config_tool/scripts/nvim-tool.sh push "Added Go LSP config"
-```
-
 ### Clean/Reset
 
 Remove symlinks and restore backup:
@@ -57,7 +49,7 @@ Remove symlinks and restore backup:
 
 ## How It Works
 
-The tool creates a symlink from your standard Neovim config location (`~/.config/nvim/`) to the `nvim/` directory in this repository. Any changes you make in Neovim are immediately reflected in the git repository, making it easy to commit and push.
+The tool creates a symlink from your standard Neovim config location (`~/.config/nvim/`) to the `nvim/` directory in this repository. Any changes you make in Neovim are immediately reflected in the git repository.
 
 ## Requirements
 
@@ -89,7 +81,6 @@ See `nvim/lua/custom/claude-setup.md` for detailed instructions.
 |---------|-------------|
 | `init` | First-time setup: clone, backup, symlink, install plugins |
 | `update` | Pull latest config changes and update plugins |
-| `push <message>` | Commit and push your local changes |
 | `clean` | Remove symlinks and optionally restore backup |
 | `status` | Show current configuration status |
 

@@ -1039,15 +1039,19 @@ require('lazy').setup({
         },
         -- Keymaps (set to false to disable)
         keymaps = {
-          toggle = false, -- Disabled, using manual keymaps below
-          continue = false, -- Disabled, using manual keymaps below
+          toggle = {
+            normal = false, -- Disabled, using manual keymaps below
+            terminal = false, -- Disabled, using manual keymaps below
+          },
+          window_navigation = true,
+          scrolling = true,
         },
       })
     end,
     keys = {
-      { 'cc', '<cmd>ClaudeCode<cr>', desc = 'Toggle Claude Code' },
-      { '<C-,>', '<cmd>ClaudeCode<cr>', desc = 'Toggle Claude Code' },
-      { '<C-.>', '<cmd>ClaudeCodeContinue<cr>', desc = 'Continue Claude Code' },
+      { '<leader>cc', '<cmd>ClaudeCode<cr>', desc = '[C]laude [C]ode Toggle', mode = 'n' },
+      { '<C-,>', '<cmd>ClaudeCode<cr>', desc = 'Toggle Claude Code', mode = 'n' },
+      { '<C-.>', '<cmd>ClaudeCodeContinue<cr>', desc = 'Continue Claude Code', mode = 'n' },
     },
   },
 

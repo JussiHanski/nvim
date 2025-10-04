@@ -90,8 +90,8 @@ P.S. You can delete this when you're done too. It's your config now! :)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
--- Disable default Neovim LSP mappings (we set our own below)
-vim.g.no_lsp_maps = 1
+-- Disable default Neovim 0.11+ LSP keymaps (we set our own below)
+vim.g.lsp_default_maps = false
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
@@ -528,16 +528,6 @@ require('lazy').setup({
       vim.api.nvim_create_autocmd('LspAttach', {
         group = vim.api.nvim_create_augroup('kickstart-lsp-attach', { clear = true }),
         callback = function(event)
-          -- Clear Neovim's default LSP keymaps that conflict with our custom ones
-          pcall(vim.keymap.del, 'n', 'grn', { buffer = event.buf })
-          pcall(vim.keymap.del, 'n', 'gra', { buffer = event.buf })
-          pcall(vim.keymap.del, 'x', 'gra', { buffer = event.buf })
-          pcall(vim.keymap.del, 'n', 'grr', { buffer = event.buf })
-          pcall(vim.keymap.del, 'n', 'gri', { buffer = event.buf })
-          pcall(vim.keymap.del, 'n', 'grt', { buffer = event.buf })
-          pcall(vim.keymap.del, 'n', 'grD', { buffer = event.buf })
-          pcall(vim.keymap.del, 'n', 'grd', { buffer = event.buf })
-
           -- NOTE: Remember that Lua is a real programming language, and as such it is possible
           -- to define small helper and utility functions so you don't have to repeat yourself.
           --

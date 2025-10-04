@@ -84,10 +84,26 @@ check_dependencies() {
     # Report critical dependencies
     if [ ${#missing_critical[@]} -ne 0 ]; then
         print_error "Missing critical dependencies: ${missing_critical[*]}"
-        print_info "Install them with:"
+
         if [[ "$OSTYPE" == "darwin"* ]]; then
+            if command -v brew &> /dev/null; then
+                read -p "Would you like to install them using Homebrew? (y/n): " -n 1 -r
+                echo
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    print_info "Installing dependencies with Homebrew..."
+                    if brew install ${missing_critical[*]}; then
+                        print_success "Dependencies installed successfully!"
+                        return 0
+                    else
+                        print_error "Some dependencies failed to install"
+                        exit 1
+                    fi
+                fi
+            fi
+            print_info "Install them with:"
             print_info "  brew install ${missing_critical[*]}"
         elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            print_info "Install them with:"
             if command -v apt-get &> /dev/null; then
                 print_info "  sudo apt-get install ${missing_critical[*]}"
             elif command -v dnf &> /dev/null; then
@@ -101,8 +117,28 @@ check_dependencies() {
     if [ ${#missing_optional[@]} -ne 0 ]; then
         print_warning "Missing optional dependencies: ${missing_optional[*]}"
         print_info "These are optional but recommended for better performance"
+
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            print_info "  brew install ${missing_optional[*]}"
+            # Map dependency names to brew package names
+            local brew_packages=()
+            for dep in "${missing_optional[@]}"; do
+                case "$dep" in
+                    cargo) brew_packages+=("rust") ;;
+                    *) brew_packages+=("$dep") ;;
+                esac
+            done
+
+            if command -v brew &> /dev/null; then
+                read -p "Would you like to install them using Homebrew? (y/n): " -n 1 -r
+                echo
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    print_info "Installing optional dependencies with Homebrew..."
+                    brew install ${brew_packages[*]}
+                    print_success "Optional dependencies installation complete!"
+                    return 0
+                fi
+            fi
+            print_info "  brew install ${brew_packages[*]}"
         fi
     fi
 

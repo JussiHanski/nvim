@@ -40,17 +40,90 @@ print_warning() {
 }
 
 check_dependencies() {
-    local missing_deps=()
+    print_info "Checking dependencies..."
 
-    if ! command -v git &> /dev/null; then
-        missing_deps+=("git")
+    local missing_critical=()
+    local missing_optional=()
+
+    # Critical dependencies
+    for dep in git make unzip; do
+        if ! command -v "$dep" &> /dev/null; then
+            missing_critical+=("$dep")
+        else
+            print_success "$dep found"
+        fi
+    done
+
+    # Check for C compiler (gcc or clang)
+    if ! command -v gcc &> /dev/null && ! command -v clang &> /dev/null; then
+        missing_critical+=("gcc or clang")
+    else
+        if command -v gcc &> /dev/null; then
+            print_success "gcc found ($(gcc --version | head -n1 | cut -d' ' -f3-))"
+        else
+            print_success "clang found ($(clang --version | head -n1 | cut -d' ' -f4))"
+        fi
     fi
 
-    if [ ${#missing_deps[@]} -ne 0 ]; then
-        print_error "Missing dependencies: ${missing_deps[*]}"
-        print_info "Please install the missing dependencies and try again."
+    # Check ripgrep
+    if ! command -v rg &> /dev/null; then
+        missing_critical+=("ripgrep")
+    else
+        print_success "ripgrep found"
+    fi
+
+    # Optional dependencies
+    for dep in fd cargo node npm; do
+        if ! command -v "$dep" &> /dev/null; then
+            missing_optional+=("$dep")
+        else
+            print_success "$dep found"
+        fi
+    done
+
+    # Report critical dependencies
+    if [ ${#missing_critical[@]} -ne 0 ]; then
+        print_error "Missing critical dependencies: ${missing_critical[*]}"
+        print_info "Install them with:"
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            print_info "  brew install ${missing_critical[*]}"
+        elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            if command -v apt-get &> /dev/null; then
+                print_info "  sudo apt-get install ${missing_critical[*]}"
+            elif command -v dnf &> /dev/null; then
+                print_info "  sudo dnf install ${missing_critical[*]}"
+            fi
+        fi
         exit 1
     fi
+
+    # Report optional dependencies
+    if [ ${#missing_optional[@]} -ne 0 ]; then
+        print_warning "Missing optional dependencies: ${missing_optional[*]}"
+        print_info "These are optional but recommended for better performance"
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            print_info "  brew install ${missing_optional[*]}"
+        fi
+    fi
+
+    print_success "All critical dependencies found"
+    echo
+}
+
+check_nvim_version() {
+    local version_output=$(nvim --version | head -n 1)
+    local version=$(echo "$version_output" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sed 's/v//')
+    local major=$(echo "$version" | cut -d. -f1)
+    local minor=$(echo "$version" | cut -d. -f2)
+
+    # Require Neovim 0.11 or higher (for nvim-lspconfig compatibility)
+    local required_major=0
+    local required_minor=11
+
+    if [ "$major" -lt "$required_major" ] || ([ "$major" -eq "$required_major" ] && [ "$minor" -lt "$required_minor" ]); then
+        return 1
+    fi
+    return 0
 }
 
 check_nvim_installed() {
@@ -62,9 +135,23 @@ check_nvim_installed() {
             install_neovim
         else
             print_info "Skipping Neovim installation. You can install it manually later."
+            return
         fi
     else
-        print_success "Neovim is already installed ($(nvim --version | head -n 1))"
+        local version_output=$(nvim --version | head -n 1)
+        if check_nvim_version; then
+            print_success "Neovim is installed ($version_output)"
+        else
+            print_warning "Neovim version is outdated ($version_output)"
+            print_info "Neovim 0.11+ is required for nvim-lspconfig compatibility"
+            read -p "Would you like to upgrade Neovim? (y/n): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                upgrade_neovim
+            else
+                print_warning "Continuing with outdated Neovim version. You may encounter errors."
+            fi
+        fi
     fi
 }
 
@@ -95,6 +182,35 @@ install_neovim() {
     fi
 
     print_success "Neovim installed successfully"
+}
+
+upgrade_neovim() {
+    print_info "Upgrading Neovim..."
+
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        if command -v brew &> /dev/null; then
+            brew upgrade neovim
+        else
+            print_error "Homebrew not found. Please upgrade Neovim manually."
+            return 1
+        fi
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        if command -v apt-get &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y --only-upgrade neovim
+        elif command -v dnf &> /dev/null; then
+            sudo dnf upgrade -y neovim
+        elif command -v pacman &> /dev/null; then
+            sudo pacman -S --noconfirm neovim
+        else
+            print_error "No supported package manager found. Please upgrade Neovim manually."
+            return 1
+        fi
+    else
+        print_error "Unsupported OS. Please upgrade Neovim manually."
+        return 1
+    fi
+
+    print_success "Neovim upgraded successfully ($(nvim --version | head -n 1))"
 }
 
 backup_existing_config() {
@@ -175,6 +291,7 @@ cmd_update() {
     print_info "Updating Neovim configuration..."
 
     check_dependencies
+    check_nvim_installed
 
     # Check if already initialized
     if [ ! -L "$NVIM_CONFIG_DIR" ]; then
@@ -269,14 +386,23 @@ cmd_status() {
 
     echo
 
-    # Check Neovim installation
+    # Check Neovim installation and version
     if command -v nvim &> /dev/null; then
-        print_success "Neovim: $(nvim --version | head -n 1)"
+        local version_output=$(nvim --version | head -n 1)
+        if check_nvim_version; then
+            print_success "Neovim: $version_output"
+        else
+            print_warning "Neovim: $version_output (0.11+ recommended)"
+        fi
     else
         print_warning "Neovim: Not installed"
     fi
 
     echo
+
+    # Check dependencies
+    print_info "Dependencies:"
+    check_dependencies
 
     # Git status
     cd "$REPO_DIR"

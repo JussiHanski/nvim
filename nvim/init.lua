@@ -1078,19 +1078,8 @@ require('lazy').setup({
           scrolling = true,
         },
       })
-    end,
-    keys = {
-      { '<leader>cc', '<cmd>ClaudeCode<cr>', desc = '[C]laude [C]ode Toggle', mode = 'n' },
-      { '<C-,>', '<cmd>ClaudeCode<cr>', desc = 'Toggle Claude Code', mode = 'n' },
-      { '<C-.>', '<cmd>ClaudeCodeContinue<cr>', desc = 'Continue Claude Code', mode = 'n' },
-    },
-  },
 
-  -- Custom commands for Claude Code IDE integration
-  {
-    'greggh/claude-code.nvim',
-    lazy = true,
-    config = function()
+      -- Add custom commands for IDE integration
       -- Add command to send /ide with current file to Claude Code
       vim.api.nvim_create_user_command('ClaudeIde', function()
         -- Get the current file path
@@ -1167,7 +1156,11 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>ci', '<cmd>ClaudeIde<cr>', { desc = '[C]laude [I]de - send current file' })
       vim.keymap.set('n', '<leader>cI', '<cmd>ClaudeIdeAll<cr>', { desc = '[C]laude [I]de - send all open files' })
     end,
-    event = 'VeryLazy',
+    keys = {
+      { '<leader>cc', '<cmd>ClaudeCode<cr>', desc = '[C]laude [C]ode Toggle', mode = 'n' },
+      { '<C-,>', '<cmd>ClaudeCode<cr>', desc = 'Toggle Claude Code', mode = 'n' },
+      { '<C-.>', '<cmd>ClaudeCodeContinue<cr>', desc = 'Continue Claude Code', mode = 'n' },
+    },
   },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the

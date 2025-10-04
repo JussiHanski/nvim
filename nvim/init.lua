@@ -642,10 +642,18 @@ require('lazy').setup({
           -- Switch between header and source (clangd specific)
           if client and client.name == 'clangd' then
             map('gh', function()
-              vim.lsp.buf.execute_command({
-                command = 'clangd.switchheadersource',
-                arguments = { vim.uri_from_bufnr(0) },
-              })
+              local params = { uri = vim.uri_from_bufnr(0) }
+              client.request('textDocument/switchSourceHeader', params, function(err, result)
+                if err then
+                  vim.notify('Error switching source/header: ' .. err.message, vim.log.levels.ERROR)
+                  return
+                end
+                if not result then
+                  vim.notify('Corresponding file not found', vim.log.levels.WARN)
+                  return
+                end
+                vim.cmd.edit(vim.uri_to_fname(result))
+              end)
             end, '[G]oto [H]eader/Source')
           end
         end,

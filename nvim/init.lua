@@ -552,7 +552,18 @@ require('lazy').setup({
 
           -- Rename the variable under your cursor.
           --  Most Language Servers support renaming across files, etc.
+          --  For C/C++: Ensure you have compile_commands.json in your project root
           map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
+
+          -- Project-wide search and replace for symbols (including macros)
+          -- This uses Telescope to show all occurrences first, then quickfix for replacement
+          map('<leader>rp', function()
+            local word = vim.fn.expand('<cword>')
+            require('telescope.builtin').grep_string({
+              search = word,
+              prompt_title = 'Project-wide occurrences of: ' .. word,
+            })
+          end, '[R]ename [P]roject-wide (search first)')
 
           -- Execute a code action, usually your cursor needs to be on top of an error
           -- or a suggestion from your LSP for this to activate.
@@ -704,7 +715,27 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        clangd = {},
+        -- Clangd configuration with enhanced features for better cross-file operations
+        -- For best results with rename, ensure you have compile_commands.json:
+        --   CMake: cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 .
+        --   Make: bear -- make
+        --   Other: Use compiledb or similar tools
+        clangd = {
+          cmd = {
+            'clangd',
+            '--background-index', -- Index project in background for better cross-file features
+            '--clang-tidy', -- Enable clang-tidy checks
+            '--header-insertion=iwyu', -- Smart header insertion
+            '--completion-style=detailed', -- More detailed completions
+            '--function-arg-placeholders', -- Placeholder arguments in completions
+            '--fallback-style=llvm', -- Code style when .clang-format is missing
+          },
+          init_options = {
+            usePlaceholders = true,
+            completeUnimported = true,
+            clangdFileStatus = true,
+          },
+        },
         -- gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},

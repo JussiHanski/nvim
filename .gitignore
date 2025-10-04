@@ -1,0 +1,16 @@
+# AI-related documentation files
+CLAUDE.md
+DESIGN.md
+
+# Backup directories
+*.backup.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*~

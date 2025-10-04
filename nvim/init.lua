@@ -1037,10 +1037,10 @@ require('lazy').setup({
           enabled = true,
           use_project_root = true,
         },
-        -- Keymaps (can be disabled by setting to false)
+        -- Keymaps (set to false to disable)
         keymaps = {
-          toggle = '<C-,>', -- Toggle Claude Code terminal
-          continue = '<C-.>', -- Continue previous conversation
+          toggle = false, -- Disabled, using manual keymaps below
+          continue = false, -- Disabled, using manual keymaps below
         },
       })
     end,

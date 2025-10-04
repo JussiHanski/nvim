@@ -290,16 +290,13 @@ cmd_init() {
 cmd_update() {
     print_info "Updating Neovim configuration..."
 
-    check_dependencies
-    check_nvim_installed
-
     # Check if already initialized
     if [ ! -L "$NVIM_CONFIG_DIR" ]; then
         print_error "Configuration not initialized. Run: init"
         exit 1
     fi
 
-    # Stash any local changes
+    # Stash any local changes and pull FIRST (before any other checks)
     cd "$REPO_DIR"
 
     if ! git diff-index --quiet HEAD --; then
@@ -316,9 +313,22 @@ cmd_update() {
         fi
     fi
 
-    # Pull latest changes
+    # Pull latest changes FIRST
     print_info "Pulling latest changes..."
+    local before_hash=$(git rev-parse HEAD)
     git pull origin main
+    local after_hash=$(git rev-parse HEAD)
+
+    # If script was updated, re-execute with the new version
+    if [ "$before_hash" != "$after_hash" ] && [ -z "$NVIM_TOOL_REEXEC" ]; then
+        print_info "Scripts updated, re-running with latest version..."
+        export NVIM_TOOL_REEXEC=1
+        exec bash "$SCRIPT_DIR/nvim-tool.sh" update
+    fi
+
+    # Now run checks with the latest script version
+    check_dependencies
+    check_nvim_installed
 
     # Update plugins
     print_info "Updating plugins..."

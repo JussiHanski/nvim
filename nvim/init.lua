@@ -1086,6 +1086,90 @@ require('lazy').setup({
     },
   },
 
+  -- Custom commands for Claude Code IDE integration
+  {
+    'greggh/claude-code.nvim',
+    lazy = true,
+    config = function()
+      -- Add command to send /ide with current file to Claude Code
+      vim.api.nvim_create_user_command('ClaudeIde', function()
+        -- Get the current file path
+        local filepath = vim.fn.expand('%:p')
+        if filepath == '' then
+          vim.notify('No file open', vim.log.levels.WARN)
+          return
+        end
+
+        -- Get Claude Code terminal buffer
+        local claude_code = require('claude-code')
+        if not claude_code.claude_code or not claude_code.claude_code.instances then
+          vim.notify('Claude Code not running. Start with <leader>cc first.', vim.log.levels.WARN)
+          return
+        end
+
+        local current_instance = claude_code.claude_code.current_instance
+        local bufnr = claude_code.claude_code.instances[current_instance]
+
+        if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+          vim.notify('Claude Code terminal not found', vim.log.levels.WARN)
+          return
+        end
+
+        -- Send /ide command with current file
+        local chan_id = vim.b[bufnr].terminal_job_id
+        if chan_id then
+          vim.fn.chansend(chan_id, '/ide ' .. filepath .. '\n')
+          vim.notify('Sent current file to Claude Code', vim.log.levels.INFO)
+        end
+      end, { desc = 'Send current file to Claude Code with /ide' })
+
+      -- Add command to send /ide with all open buffers
+      vim.api.nvim_create_user_command('ClaudeIdeAll', function()
+        local claude_code = require('claude-code')
+        if not claude_code.claude_code or not claude_code.claude_code.instances then
+          vim.notify('Claude Code not running. Start with <leader>cc first.', vim.log.levels.WARN)
+          return
+        end
+
+        local current_instance = claude_code.claude_code.current_instance
+        local bufnr = claude_code.claude_code.instances[current_instance]
+
+        if not bufnr or not vim.api.nvim_buf_is_valid(bufnr) then
+          vim.notify('Claude Code terminal not found', vim.log.levels.WARN)
+          return
+        end
+
+        -- Get all valid file buffers
+        local files = {}
+        for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+          if vim.api.nvim_buf_is_loaded(buf) and vim.api.nvim_buf_get_option(buf, 'buftype') == '' then
+            local filepath = vim.api.nvim_buf_get_name(buf)
+            if filepath ~= '' and vim.fn.filereadable(filepath) == 1 then
+              table.insert(files, filepath)
+            end
+          end
+        end
+
+        if #files == 0 then
+          vim.notify('No files open', vim.log.levels.WARN)
+          return
+        end
+
+        -- Send /ide command with all files
+        local chan_id = vim.b[bufnr].terminal_job_id
+        if chan_id then
+          vim.fn.chansend(chan_id, '/ide ' .. table.concat(files, ' ') .. '\n')
+          vim.notify('Sent ' .. #files .. ' file(s) to Claude Code', vim.log.levels.INFO)
+        end
+      end, { desc = 'Send all open buffers to Claude Code with /ide' })
+
+      -- Add keymaps for IDE commands
+      vim.keymap.set('n', '<leader>ci', '<cmd>ClaudeIde<cr>', { desc = '[C]laude [I]de - send current file' })
+      vim.keymap.set('n', '<leader>cI', '<cmd>ClaudeIdeAll<cr>', { desc = '[C]laude [I]de - send all open files' })
+    end,
+    event = 'VeryLazy',
+  },
+
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.

@@ -27,7 +27,8 @@ goto :show_help
 echo Initializing Neovim configuration...
 echo.
 
-call :check_dependencies
+:: Auto-install optional dependencies during init
+call :check_dependencies auto
 if errorlevel 1 exit /b 1
 
 call :check_nvim_installed
@@ -200,6 +201,8 @@ git log --oneline -5
 exit /b 0
 
 :check_dependencies
+set "AUTO_INSTALL_OPTIONAL=%~1"
+
 echo Checking dependencies...
 
 set "MISSING_CRITICAL="
@@ -324,19 +327,26 @@ if not "%MISSING_CRITICAL%"=="" (
 )
 
 :: Report optional dependencies
-if not "%MISSING_OPTIONAL%"=="" (
+if not "%MISSING_OPTIONAL%"==" " (
     echo.
     echo [!] Missing optional dependencies:%MISSING_OPTIONAL%
 
     :: Check if winget is available
     where winget >nul 2>&1
     if not errorlevel 1 (
-        set /p "REPLY=Would you like to install optional dependencies using winget? (y/n): "
-        if /i "!REPLY!"=="y" (
+        :: Auto-install if requested (during init), otherwise ask
+        if /i "%AUTO_INSTALL_OPTIONAL%"=="auto" (
+            echo Installing optional dependencies with winget...
             call :install_optional_with_winget
+            echo [OK] Optional dependencies installation complete!
         ) else (
-            echo These are optional but recommended for better performance
-            call :show_optional_manual_instructions
+            set /p "REPLY=Would you like to install optional dependencies using winget? (y/n): "
+            if /i "!REPLY!"=="y" (
+                call :install_optional_with_winget
+            ) else (
+                echo These are optional but recommended for better performance
+                call :show_optional_manual_instructions
+            )
         )
     ) else (
         echo These are optional but recommended for better performance

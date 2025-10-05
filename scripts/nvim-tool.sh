@@ -40,6 +40,8 @@ print_warning() {
 }
 
 check_dependencies() {
+    local auto_install_optional="${1:-false}"
+
     print_info "Checking dependencies..."
 
     local missing_critical=()
@@ -118,27 +120,37 @@ check_dependencies() {
         print_warning "Missing optional dependencies: ${missing_optional[*]}"
         print_info "These are optional but recommended for better performance"
 
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # Map dependency names to brew package names
-            local brew_packages=()
-            for dep in "${missing_optional[@]}"; do
-                case "$dep" in
-                    cargo) brew_packages+=("rust") ;;
-                    *) brew_packages+=("$dep") ;;
-                esac
-            done
-
+        if [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "linux-gnu"* ]]; then
             if command -v brew &> /dev/null; then
-                read -p "Would you like to install them using Homebrew? (y/n): " -n 1 -r
-                echo
-                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                # Map dependency names to brew package names
+                local brew_packages=()
+                for dep in "${missing_optional[@]}"; do
+                    case "$dep" in
+                        cargo) brew_packages+=("rust") ;;
+                        *) brew_packages+=("$dep") ;;
+                    esac
+                done
+
+                # Auto-install if requested (during init), otherwise ask
+                if [ "$auto_install_optional" = "true" ]; then
                     print_info "Installing optional dependencies with Homebrew..."
                     brew install ${brew_packages[*]}
                     print_success "Optional dependencies installation complete!"
-                    return 0
+                else
+                    read -p "Would you like to install them using Homebrew? (y/n): " -n 1 -r
+                    echo
+                    if [[ $REPLY =~ ^[Yy]$ ]]; then
+                        print_info "Installing optional dependencies with Homebrew..."
+                        brew install ${brew_packages[*]}
+                        print_success "Optional dependencies installation complete!"
+                    else
+                        print_info "You can install them later with:"
+                        print_info "  brew install ${brew_packages[*]}"
+                    fi
                 fi
+            else
+                print_info "Homebrew not found. You can install optional dependencies manually."
             fi
-            print_info "  brew install ${brew_packages[*]}"
         fi
     fi
 
@@ -461,7 +473,8 @@ install_plugins() {
 cmd_init() {
     print_info "Initializing Neovim configuration..."
 
-    check_dependencies
+    # Auto-install optional dependencies during init
+    check_dependencies true
     check_nvim_installed
 
     # Check if nvim source directory exists

@@ -11,40 +11,43 @@ Working on multiple machines means keeping Neovim configurations in sync is a pa
 
 ## Quick Start
 
-### First Time Setup
+**📖 For detailed platform-specific instructions, see [INSTALL.md](INSTALL.md)**
+
+### macOS/Linux
 
 ```bash
-# Download the bootstrap script
-curl -fsSL https://raw.githubusercontent.com/JussiHanski/nvim/main/bootstrap.sh -o bootstrap.sh
-
-# Initialize on your machine
-bash bootstrap.sh init
+# Download and initialize in one command
+bash <(curl -fsSL https://raw.githubusercontent.com/JussiHanski/nvim/main/bootstrap.sh) init
 ```
 
-This will:
-- Clone this repository to `~/.config/nvim_config_tool/`
-- Backup your existing Neovim config (if any)
-- Create symlinks to use this config
-- Install all plugins
+### Windows (PowerShell/cmd)
 
-### Update Configuration (Pull Latest Changes)
-
-```bash
-bash bootstrap.sh update
+```cmd
+git clone git@github-personal:JussiHanski/nvim.git %USERPROFILE%\.config\nvim_config_tool
+cd %USERPROFILE%\.config\nvim_config_tool
+bootstrap.bat init
 ```
 
-Or if you've already set up:
+### What it does:
+
+- Clones repository to `~/.config/nvim_config_tool/` (or `%USERPROFILE%\.config\nvim_config_tool` on Windows)
+- Backs up existing Neovim config
+- Creates symlinks/junctions to use this config
+- Auto-installs dependencies and plugins
+- Installs Neovim 0.11+ if missing
+
+### Update Configuration
 
 ```bash
-~/.config/nvim_config_tool/scripts/nvim-tool.sh update
+bash bootstrap.sh update      # Unix/Linux/macOS
+bootstrap.bat update          # Windows
 ```
 
 ### Clean/Reset
 
-Remove symlinks and restore backup:
-
 ```bash
-~/.config/nvim_config_tool/scripts/nvim-tool.sh clean
+bash bootstrap.sh clean       # Unix/Linux/macOS
+bootstrap.bat clean          # Windows
 ```
 
 ## How It Works
@@ -53,27 +56,42 @@ The tool creates a symlink from your standard Neovim config location (`~/.config
 
 ## Requirements
 
+**Critical (auto-installed if missing):**
 - Git
-- Neovim (will be installed if missing, with your permission)
-- curl or wget (for bootstrap download)
-- Claude Code CLI (optional, for AI features)
+- Neovim 0.11+
+- Make
+- C compiler (gcc/clang/MSVC)
+- Ripgrep
+
+**Optional (recommended):**
+- fd (faster file search)
+- cargo (Rust, for additional plugins)
+- node/npm (for some LSP servers)
+- Claude Code CLI (for AI assistant integration)
+
+The bootstrap script handles dependency installation automatically on all platforms.
 
 ## Claude Code Integration
 
 The configuration includes claude-code.nvim, which embeds Claude Code directly into Neovim:
 
-- Press `cc` or `Ctrl+,` to toggle Claude Code terminal
-- Press `Ctrl+.` to continue previous conversation
+- **`<leader>cc`** (Space+cc) or **`Ctrl+,`** - Toggle Claude Code terminal
+- **`<leader>ca`** (Space+ca) - Add current file to Claude context with `@`
+- **`<leader>cA`** (Space+cA) - Add all open files to Claude context
+- **`Ctrl+.`** - Continue previous conversation
 - Automatic file reload when Claude Code modifies files
 - Side-by-side editing with AI assistance
 
-See `nvim/lua/custom/claude-setup.md` for detailed instructions.
+See [CLAUDE.md](CLAUDE.md) for complete keybindings and features.
 
 ## Platform Support
 
-- ✅ Linux
-- ✅ macOS
-- ⏳ Windows (coming soon)
+- ✅ macOS (Intel & Apple Silicon)
+- ✅ Linux (Ubuntu, Debian, Fedora, Arch)
+- ✅ Windows (PowerShell/cmd with junction points)
+- ✅ Windows WSL2 (Ubuntu/Debian)
+
+See [INSTALL.md](INSTALL.md) for platform-specific installation instructions.
 
 ## Commands
 
@@ -88,15 +106,18 @@ See `nvim/lua/custom/claude-setup.md` for detailed instructions.
 
 ```
 nvim_config_tool/
-├── bootstrap.sh          # Bootstrap script for easy setup
-├── nvim/                 # Your actual Neovim configuration
-│   ├── init.lua         # Main config entry
-│   └── lua/             # Lua modules
-│       ├── core/        # Core settings
-│       ├── plugins/     # Plugin configs
-│       └── lsp/         # LSP configurations
+├── bootstrap.sh              # Bootstrap script (Unix/Linux/macOS)
+├── bootstrap.bat             # Bootstrap script (Windows)
+├── INSTALL.md                # Platform-specific installation guide
+├── CLAUDE.md                 # Configuration reference and keybindings
+├── nvim/                     # Actual Neovim configuration (kickstart.nvim based)
+│   ├── init.lua             # Main config (1000+ lines, well-documented)
+│   └── lua/
+│       ├── kickstart/       # Optional kickstart plugins
+│       └── custom/          # Your custom plugins
 └── scripts/
-    └── nvim-tool.sh     # Management script
+    ├── nvim-tool.sh         # Management tool (Unix/Linux/macOS)
+    └── nvim-tool.bat        # Management tool (Windows)
 ```
 
 ## License

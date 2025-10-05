@@ -24,7 +24,7 @@ goto :show_help
 :init_cmd
 call :check_git
 if errorlevel 1 exit /b 1
-call :clone_repo
+call :clone_or_update_repo
 if errorlevel 1 exit /b 1
 goto :delegate_cmd
 
@@ -56,9 +56,30 @@ if errorlevel 1 (
 )
 exit /b 0
 
-:clone_repo
+:clone_or_update_repo
 if exist "%INSTALL_DIR%" (
     echo Repository already exists at %INSTALL_DIR%
+    echo Pulling latest changes...
+
+    cd /d "%INSTALL_DIR%"
+
+    :: Stash any local changes
+    git diff-index --quiet HEAD -- 2>nul
+    if errorlevel 1 (
+        echo Stashing local changes...
+        for /f "tokens=1-3 delims=/ " %%a in ('echo %date%') do set "DATESTAMP=%%c%%a%%b"
+        for /f "tokens=1-2 delims=:. " %%a in ('echo %time%') do set "TIMESTAMP=%%a%%b"
+        git stash push -m "Auto-stash before init %DATESTAMP%_%TIMESTAMP%"
+    )
+
+    :: Pull latest
+    git pull origin main
+    if errorlevel 1 (
+        echo Error: Failed to pull latest changes
+        exit /b 1
+    )
+
+    echo Repository updated to latest version
     exit /b 0
 )
 

@@ -32,9 +32,28 @@ check_git() {
     fi
 }
 
-clone_repo() {
+clone_or_update_repo() {
     if [ -d "$INSTALL_DIR" ]; then
         print_info "Repository already exists at $INSTALL_DIR"
+        print_info "Pulling latest changes..."
+
+        cd "$INSTALL_DIR"
+
+        # Stash any local changes
+        if ! git diff-index --quiet HEAD -- 2>/dev/null; then
+            print_info "Stashing local changes..."
+            git stash push -m "Auto-stash before init $(date +%Y%m%d_%H%M%S)"
+        fi
+
+        # Pull latest
+        if git pull origin main; then
+            print_success "Repository updated to latest version"
+        else
+            print_error "Failed to pull latest changes"
+            exit 1
+        fi
+
+        cd - > /dev/null
         return 0
     fi
 
@@ -77,9 +96,9 @@ main() {
         init|update|clean|status)
             check_git
 
-            # Clone repo if needed (for init command)
+            # Clone or update repo if running init
             if [ "$command" = "init" ]; then
-                clone_repo
+                clone_or_update_repo
             fi
 
             # Check if tool script exists

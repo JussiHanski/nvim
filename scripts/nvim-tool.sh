@@ -192,7 +192,7 @@ check_nvim_installed() {
 }
 
 install_neovim() {
-    print_info "Installing Neovim..."
+    print_info "Installing Neovim 0.11+..."
 
     if [[ "$OSTYPE" == "darwin"* ]]; then
         if command -v brew &> /dev/null; then
@@ -203,25 +203,54 @@ install_neovim() {
         fi
     elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
         if command -v apt-get &> /dev/null; then
-            sudo apt-get update && sudo apt-get install -y neovim
+            print_warning "Ubuntu/Debian default repos may have old Neovim (0.10.x)"
+            echo "Options:"
+            echo "  1) Install via AppImage (recommended, latest version)"
+            echo "  2) Install from default repo (may be old)"
+            read -p "Choose option (1-2): " -n 1 -r
+            echo
+
+            case $REPLY in
+                1)
+                    install_neovim_appimage
+                    return $?
+                    ;;
+                2)
+                    sudo apt-get update && sudo apt-get install -y neovim
+                    ;;
+                *)
+                    print_error "Invalid option"
+                    return 1
+                    ;;
+            esac
         elif command -v dnf &> /dev/null; then
+            # Fedora 40+ has recent Neovim
             sudo dnf install -y neovim
         elif command -v pacman &> /dev/null; then
+            # Arch always has latest
             sudo pacman -S --noconfirm neovim
         else
-            print_error "No supported package manager found. Please install Neovim manually."
-            return 1
+            print_warning "No supported package manager found."
+            print_info "Installing via AppImage..."
+            install_neovim_appimage
+            return $?
         fi
     else
         print_error "Unsupported OS. Please install Neovim manually."
         return 1
     fi
 
-    print_success "Neovim installed successfully"
+    # Verify installation
+    if check_nvim_version; then
+        print_success "Neovim installed successfully: $(nvim --version | head -n 1)"
+    else
+        print_warning "Neovim installed but version is < 0.11"
+        print_info "You can upgrade with: ./scripts/nvim-tool.sh update"
+    fi
 }
 
 upgrade_neovim() {
-    print_info "Upgrading Neovim..."
+    print_info "Upgrading Neovim to 0.11+..."
 
     if [[ "$OSTYPE" == "darwin"* ]]; then
         if command -v brew &> /dev/null; then
@@ -231,22 +260,102 @@ upgrade_neovim() {
             return 1
         fi
     elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        # For Ubuntu/Debian, default repos often have old versions
+        # Offer AppImage as the most reliable option
         if command -v apt-get &> /dev/null; then
-            sudo apt-get update && sudo apt-get install -y --only-upgrade neovim
+            print_warning "Ubuntu/Debian default repos may not have Neovim 0.11+"
+            echo "Options:"
+            echo "  1) Install via AppImage (recommended, self-contained)"
+            echo "  2) Try unstable PPA (may have newer version)"
+            echo "  3) Try apt upgrade (likely still old)"
+            read -p "Choose option (1-3): " -n 1 -r
+            echo
+
+            case $REPLY in
+                1)
+                    install_neovim_appimage
+                    return $?
+                    ;;
+                2)
+                    print_info "Adding Neovim unstable PPA..."
+                    sudo add-apt-repository -y ppa:neovim-ppa/unstable
+                    sudo apt-get update
+                    sudo apt-get install -y neovim
+                    ;;
+                3)
+                    sudo apt-get update && sudo apt-get install -y --only-upgrade neovim
+                    ;;
+                *)
+                    print_error "Invalid option"
+                    return 1
+                    ;;
+            esac
         elif command -v dnf &> /dev/null; then
+            # Fedora 40+ should have recent Neovim
             sudo dnf upgrade -y neovim
         elif command -v pacman &> /dev/null; then
-            sudo pacman -S --noconfirm neovim
+            # Arch always has latest
+            sudo pacman -Syu --noconfirm neovim
         else
-            print_error "No supported package manager found. Please upgrade Neovim manually."
-            return 1
+            print_error "No supported package manager found."
+            print_info "Installing via AppImage..."
+            install_neovim_appimage
+            return $?
         fi
     else
         print_error "Unsupported OS. Please upgrade Neovim manually."
         return 1
     fi
 
-    print_success "Neovim upgraded successfully ($(nvim --version | head -n 1))"
+    # Verify upgrade worked
+    if check_nvim_version; then
+        print_success "Neovim upgraded successfully ($(nvim --version | head -n 1))"
+    else
+        print_warning "Upgrade completed but version is still < 0.11"
+        print_info "Consider using AppImage: install_neovim_appimage"
+    fi
+}
+
+install_neovim_appimage() {
+    print_info "Installing Neovim AppImage..."
+
+    local temp_file="/tmp/nvim.appimage"
+    local install_dir="/usr/local/bin"
+
+    # Download latest AppImage
+    print_info "Downloading latest Neovim AppImage..."
+    if command -v curl &> /dev/null; then
+        curl -L -o "$temp_file" https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
+    elif command -v wget &> /dev/null; then
+        wget -O "$temp_file" https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
+    else
+        print_error "Neither curl nor wget found. Cannot download AppImage."
+        return 1
+    fi
+
+    # Make executable
+    chmod +x "$temp_file"
+
+    # Test if it works
+    if ! "$temp_file" --version &> /dev/null; then
+        print_error "AppImage failed to run. Your system may not support AppImages."
+        print_info "Try: sudo apt-get install fuse libfuse2"
+        rm -f "$temp_file"
+        return 1
+    fi
+
+    # Remove old nvim if it exists
+    if [ -f "$install_dir/nvim" ]; then
+        print_info "Removing old nvim from $install_dir/nvim"
+        sudo rm -f "$install_dir/nvim"
+    fi
+
+    # Install
+    print_info "Installing to $install_dir/nvim"
+    sudo mv "$temp_file" "$install_dir/nvim"
+
+    print_success "Neovim AppImage installed: $(nvim --version | head -n 1)"
+    return 0
 }
 
 backup_existing_config() {

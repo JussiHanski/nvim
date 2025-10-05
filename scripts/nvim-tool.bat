@@ -327,7 +327,7 @@ if not "%MISSING_CRITICAL%"=="" (
 )
 
 :: Report optional dependencies
-if not "%MISSING_OPTIONAL%"==" " (
+if not "%MISSING_OPTIONAL%"=="" (
     echo.
     echo [!] Missing optional dependencies:%MISSING_OPTIONAL%
 

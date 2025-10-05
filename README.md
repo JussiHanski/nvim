@@ -22,9 +22,17 @@ bash <(curl -fsSL https://raw.githubusercontent.com/JussiHanski/nvim/main/bootst
 
 ### Windows (PowerShell/cmd)
 
+**PowerShell:**
+```powershell
+git clone https://github.com/JussiHanski/nvim.git $env:USERPROFILE\.config\nvim_config_tool
+cd $env:USERPROFILE\.config\nvim_config_tool
+.\bootstrap.bat init
+```
+
+**Command Prompt (cmd):**
 ```cmd
-git clone https://github.com/JussiHanski/nvim.git %USERPROFILE%\.config\nvim_config_tool
-cd %USERPROFILE%\.config\nvim_config_tool
+git clone https://github.com/JussiHanski/nvim.git "%USERPROFILE%\.config\nvim_config_tool"
+cd "%USERPROFILE%\.config\nvim_config_tool"
 bootstrap.bat init
 ```
 

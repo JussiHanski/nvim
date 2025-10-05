@@ -165,10 +165,19 @@ brew install git make unzip ripgrep fd rust node
 
 ### Installation
 
-1. **Open PowerShell or cmd and clone:**
+1. **Open PowerShell or Command Prompt and clone:**
+
+   **PowerShell:**
+   ```powershell
+   git clone https://github.com/JussiHanski/nvim.git $env:USERPROFILE\.config\nvim_config_tool
+   cd $env:USERPROFILE\.config\nvim_config_tool
+   .\bootstrap.bat init
+   ```
+
+   **Command Prompt (cmd):**
    ```cmd
-   git clone https://github.com/JussiHanski/nvim.git %USERPROFILE%\.config\nvim_config_tool
-   cd %USERPROFILE%\.config\nvim_config_tool
+   git clone https://github.com/JussiHanski/nvim.git "%USERPROFILE%\.config\nvim_config_tool"
+   cd "%USERPROFILE%\.config\nvim_config_tool"
    bootstrap.bat init
    ```
 

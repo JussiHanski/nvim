@@ -175,11 +175,39 @@ check_nvim_installed() {
         fi
     else
         local version_output=$(nvim --version | head -n 1)
+        local nvim_path=$(command -v nvim)
+
         if check_nvim_version; then
             print_success "Neovim is installed ($version_output)"
+            print_info "Location: $nvim_path"
         else
             print_warning "Neovim version is outdated ($version_output)"
+            print_info "Location: $nvim_path"
             print_info "Neovim 0.11+ is required for nvim-lspconfig compatibility"
+
+            # Check if there's a system nvim that might conflict with brew
+            if command -v brew &> /dev/null && ! brew list neovim &> /dev/null; then
+                if [[ "$nvim_path" == "/usr/bin/nvim" ]] || [[ "$nvim_path" == "/bin/nvim" ]]; then
+                    print_warning "Neovim appears to be from system package manager (not Homebrew)"
+                    print_info "Recommendation: Uninstall system nvim and install via Homebrew for latest version"
+                    read -p "Remove system Neovim and install via Homebrew? (y/n): " -n 1 -r
+                    echo
+                    if [[ $REPLY =~ ^[Yy]$ ]]; then
+                        # Try to remove system nvim
+                        if command -v apt-get &> /dev/null; then
+                            sudo apt-get remove -y neovim
+                        elif command -v dnf &> /dev/null; then
+                            sudo dnf remove -y neovim
+                        elif command -v pacman &> /dev/null; then
+                            sudo pacman -R --noconfirm neovim
+                        fi
+                        # Install via brew
+                        install_neovim
+                        return
+                    fi
+                fi
+            fi
+
             read -p "Would you like to upgrade Neovim? (y/n): " -n 1 -r
             echo
             if [[ $REPLY =~ ^[Yy]$ ]]; then
@@ -258,10 +286,21 @@ upgrade_neovim() {
 
     # Check for Homebrew first (works on macOS and Linux/WSL)
     if command -v brew &> /dev/null; then
-        print_info "Homebrew detected, upgrading Neovim..."
-        brew upgrade neovim
-        print_success "Neovim upgraded via Homebrew: $(nvim --version | head -n 1)"
-        return 0
+        # Check if neovim is installed via brew
+        if brew list neovim &> /dev/null; then
+            print_info "Homebrew detected, upgrading Neovim..."
+            brew upgrade neovim
+            print_success "Neovim upgraded via Homebrew: $(nvim --version | head -n 1)"
+            return 0
+        else
+            # Homebrew exists but neovim not installed via brew
+            # This means nvim is from another source (apt, old install, etc.)
+            print_info "Homebrew detected, but Neovim not installed via brew"
+            print_info "Installing Neovim via Homebrew..."
+            brew install neovim
+            print_success "Neovim installed via Homebrew: $(nvim --version | head -n 1)"
+            return 0
+        fi
     fi
 
     if [[ "$OSTYPE" == "darwin"* ]]; then

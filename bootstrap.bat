@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 :: Configuration
-set "REPO_URL=git@github-personal:JussiHanski/nvim.git"
+set "REPO_URL=https://github.com/JussiHanski/nvim.git"
 set "INSTALL_DIR=%USERPROFILE%\.config\nvim_config_tool"
 set "TOOL_SCRIPT=%INSTALL_DIR%\scripts\nvim-tool.bat"
 

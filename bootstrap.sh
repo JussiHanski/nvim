@@ -8,7 +8,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-REPO_URL="git@github-personal:JussiHanski/nvim.git"
+REPO_URL="https://github.com/JussiHanski/nvim.git"
 INSTALL_DIR="$HOME/.config/nvim_config_tool"
 TOOL_SCRIPT="$INSTALL_DIR/scripts/nvim-tool.sh"
 

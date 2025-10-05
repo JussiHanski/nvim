@@ -66,7 +66,7 @@ brew install git make unzip ripgrep fd rust node
 
 2. **Clone and initialize:**
    ```bash
-   git clone git@github-personal:JussiHanski/nvim.git ~/.config/nvim_config_tool
+   git clone https://github.com/JussiHanski/nvim.git ~/.config/nvim_config_tool
    cd ~/.config/nvim_config_tool
    bash bootstrap.sh init
    ```
@@ -97,7 +97,7 @@ brew install git make unzip ripgrep fd rust node
 
 2. **Clone and initialize:**
    ```bash
-   git clone git@github-personal:JussiHanski/nvim.git ~/.config/nvim_config_tool
+   git clone https://github.com/JussiHanski/nvim.git ~/.config/nvim_config_tool
    cd ~/.config/nvim_config_tool
    bash bootstrap.sh init
    ```
@@ -128,7 +128,7 @@ brew install git make unzip ripgrep fd rust node
 1. **Install and initialize:**
    ```bash
    sudo pacman -S git neovim make unzip gcc ripgrep fd rust nodejs npm
-   git clone git@github-personal:JussiHanski/nvim.git ~/.config/nvim_config_tool
+   git clone https://github.com/JussiHanski/nvim.git ~/.config/nvim_config_tool
    cd ~/.config/nvim_config_tool
    bash bootstrap.sh init
    ```
@@ -148,7 +148,7 @@ brew install git make unzip ripgrep fd rust node
 
 1. **Open PowerShell or cmd and clone:**
    ```cmd
-   git clone git@github-personal:JussiHanski/nvim.git %USERPROFILE%\.config\nvim_config_tool
+   git clone https://github.com/JussiHanski/nvim.git %USERPROFILE%\.config\nvim_config_tool
    cd %USERPROFILE%\.config\nvim_config_tool
    bootstrap.bat init
    ```

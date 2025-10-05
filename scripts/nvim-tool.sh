@@ -194,13 +194,17 @@ check_nvim_installed() {
 install_neovim() {
     print_info "Installing Neovim 0.11+..."
 
+    # Check for Homebrew first (works on macOS and Linux/WSL)
+    if command -v brew &> /dev/null; then
+        print_info "Homebrew detected, installing Neovim..."
+        brew install neovim
+        print_success "Neovim installed via Homebrew: $(nvim --version | head -n 1)"
+        return 0
+    fi
+
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        if command -v brew &> /dev/null; then
-            brew install neovim
-        else
-            print_error "Homebrew not found. Please install Neovim manually."
-            return 1
-        fi
+        print_error "Homebrew not found. Please install Neovim manually."
+        return 1
     elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
         if command -v apt-get &> /dev/null; then
             print_warning "Ubuntu/Debian default repos may have old Neovim (0.10.x)"
@@ -252,13 +256,17 @@ install_neovim() {
 upgrade_neovim() {
     print_info "Upgrading Neovim to 0.11+..."
 
+    # Check for Homebrew first (works on macOS and Linux/WSL)
+    if command -v brew &> /dev/null; then
+        print_info "Homebrew detected, upgrading Neovim..."
+        brew upgrade neovim
+        print_success "Neovim upgraded via Homebrew: $(nvim --version | head -n 1)"
+        return 0
+    fi
+
     if [[ "$OSTYPE" == "darwin"* ]]; then
-        if command -v brew &> /dev/null; then
-            brew upgrade neovim
-        else
-            print_error "Homebrew not found. Please upgrade Neovim manually."
-            return 1
-        fi
+        print_error "Homebrew not found. Please upgrade Neovim manually."
+        return 1
     elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
         # For Ubuntu/Debian, default repos often have old versions
         # Offer AppImage as the most reliable option
@@ -312,7 +320,7 @@ upgrade_neovim() {
         print_success "Neovim upgraded successfully ($(nvim --version | head -n 1))"
     else
         print_warning "Upgrade completed but version is still < 0.11"
-        print_info "Consider using AppImage: install_neovim_appimage"
+        print_info "Consider installing Homebrew or using AppImage"
     fi
 }
 

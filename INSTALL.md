@@ -108,11 +108,28 @@ brew install git make unzip ripgrep fd rust node
    ```
 
 4. **Install/upgrade Neovim (0.11+ required):**
-   ```bash
-   # Ubuntu 24.04+ has newer Neovim
-   sudo apt-get install neovim
 
-   # For older Ubuntu, use PPA or AppImage:
+   **Option A: Homebrew (Recommended - easiest way to get latest version)**
+   ```bash
+   # Install Homebrew on Linux
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+   # Add to PATH (follow instructions after install, or use these):
+   echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc
+   eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+   # Install Neovim
+   brew install neovim
+   ```
+
+   **Option B: Default repository (may be old version 0.10.x)**
+   ```bash
+   sudo apt-get install neovim
+   ```
+
+   **Option C: PPA or AppImage**
+   ```bash
+   # Unstable PPA:
    sudo add-apt-repository ppa:neovim-ppa/unstable
    sudo apt-get update
    sudo apt-get install neovim
@@ -122,6 +139,8 @@ brew install git make unzip ripgrep fd rust node
    chmod +x nvim.appimage
    sudo mv nvim.appimage /usr/local/bin/nvim
    ```
+
+   The bootstrap script will automatically detect Homebrew and use it if available!
 
 ### Arch Linux
 
@@ -208,6 +227,28 @@ WSL2 runs Linux, so follow the **Linux (Ubuntu/Debian)** instructions above.
 2. **Restart your computer**
 
 3. **Set up Ubuntu** and follow the Ubuntu installation steps above
+
+### Recommended: Install Homebrew on WSL2 (Easy Neovim 0.11+ Installation)
+
+The easiest way to get Neovim 0.11+ on WSL2 is via Homebrew:
+
+1. **Install Homebrew:**
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+2. **Add Homebrew to PATH** (follow the instructions printed after installation):
+   ```bash
+   echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc
+   eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+   ```
+
+3. **Install Neovim:**
+   ```bash
+   brew install neovim
+   ```
+
+The bootstrap script will automatically detect and use Homebrew if available!
 
 ### Accessing Files
 

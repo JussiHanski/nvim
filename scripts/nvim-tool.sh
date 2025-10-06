@@ -164,37 +164,93 @@ check_dependencies() {
         print_warning "Missing optional dependencies: ${missing_optional[*]}"
         print_info "These are optional but recommended for better performance"
 
-        if [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            if command -v brew &> /dev/null; then
-                # Map dependency names to brew package names
-                local brew_packages=()
-                for dep in "${missing_optional[@]}"; do
-                    case "$dep" in
-                        cargo) brew_packages+=("rust") ;;
-                        *) brew_packages+=("$dep") ;;
-                    esac
-                done
+        # Check for Homebrew first (works on macOS and Linux)
+        if command -v brew &> /dev/null; then
+            # Map dependency names to brew package names
+            local brew_packages=()
+            for dep in "${missing_optional[@]}"; do
+                case "$dep" in
+                    cargo) brew_packages+=("rust") ;;
+                    *) brew_packages+=("$dep") ;;
+                esac
+            done
 
-                # Auto-install if requested (during init), otherwise ask
-                if [ "$auto_install_optional" = "true" ]; then
+            # Auto-install if requested (during init), otherwise ask
+            if [ "$auto_install_optional" = "true" ]; then
+                print_info "Installing optional dependencies with Homebrew..."
+                brew install ${brew_packages[*]}
+                print_success "Optional dependencies installation complete!"
+            else
+                read -p "Would you like to install them using Homebrew? (y/n): " -n 1 -r
+                echo
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
                     print_info "Installing optional dependencies with Homebrew..."
                     brew install ${brew_packages[*]}
                     print_success "Optional dependencies installation complete!"
                 else
-                    read -p "Would you like to install them using Homebrew? (y/n): " -n 1 -r
+                    print_info "You can install them later with:"
+                    print_info "  brew install ${brew_packages[*]}"
+                fi
+            fi
+        elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            # Map dependency names to package manager specific names
+            local apt_packages=()
+            local dnf_packages=()
+
+            for dep in "${missing_optional[@]}"; do
+                case "$dep" in
+                    cargo)
+                        apt_packages+=("cargo")
+                        dnf_packages+=("cargo")
+                        ;;
+                    *)
+                        apt_packages+=("$dep")
+                        dnf_packages+=("$dep")
+                        ;;
+                esac
+            done
+
+            if command -v apt-get &> /dev/null; then
+                # Auto-install if requested (during init), otherwise ask
+                if [ "$auto_install_optional" = "true" ]; then
+                    print_info "Installing optional dependencies with apt-get..."
+                    sudo apt-get install -y ${apt_packages[*]}
+                    print_success "Optional dependencies installation complete!"
+                else
+                    read -p "Would you like to install them using apt-get? (y/n): " -n 1 -r
                     echo
                     if [[ $REPLY =~ ^[Yy]$ ]]; then
-                        print_info "Installing optional dependencies with Homebrew..."
-                        brew install ${brew_packages[*]}
+                        print_info "Installing optional dependencies with apt-get..."
+                        sudo apt-get install -y ${apt_packages[*]}
                         print_success "Optional dependencies installation complete!"
                     else
                         print_info "You can install them later with:"
-                        print_info "  brew install ${brew_packages[*]}"
+                        print_info "  sudo apt-get install -y ${apt_packages[*]}"
+                    fi
+                fi
+            elif command -v dnf &> /dev/null; then
+                # Auto-install if requested (during init), otherwise ask
+                if [ "$auto_install_optional" = "true" ]; then
+                    print_info "Installing optional dependencies with dnf..."
+                    sudo dnf install -y ${dnf_packages[*]}
+                    print_success "Optional dependencies installation complete!"
+                else
+                    read -p "Would you like to install them using dnf? (y/n): " -n 1 -r
+                    echo
+                    if [[ $REPLY =~ ^[Yy]$ ]]; then
+                        print_info "Installing optional dependencies with dnf..."
+                        sudo dnf install -y ${dnf_packages[*]}
+                        print_success "Optional dependencies installation complete!"
+                    else
+                        print_info "You can install them later with:"
+                        print_info "  sudo dnf install -y ${dnf_packages[*]}"
                     fi
                 fi
             else
-                print_info "Homebrew not found. You can install optional dependencies manually."
+                print_info "No supported package manager found. You can install optional dependencies manually."
             fi
+        else
+            print_info "Install optional dependencies manually for your platform."
         fi
     fi
 

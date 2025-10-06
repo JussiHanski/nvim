@@ -199,9 +199,21 @@ check_dependencies() {
 
             for dep in "${missing_optional[@]}"; do
                 case "$dep" in
+                    fd)
+                        apt_packages+=("fd-find")  # Ubuntu package name
+                        dnf_packages+=("fd-find")   # Fedora package name
+                        ;;
                     cargo)
                         apt_packages+=("cargo")
                         dnf_packages+=("cargo")
+                        ;;
+                    node)
+                        apt_packages+=("nodejs")    # Ubuntu package name
+                        dnf_packages+=("nodejs")    # Fedora package name
+                        ;;
+                    npm)
+                        apt_packages+=("npm")
+                        dnf_packages+=("npm")
                         ;;
                     *)
                         apt_packages+=("$dep")

@@ -105,11 +105,55 @@ check_dependencies() {
             print_info "Install them with:"
             print_info "  brew install ${missing_critical[*]}"
         elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            print_info "Install them with:"
+            # Map generic names to package manager specific names
+            local apt_packages=()
+            local dnf_packages=()
+
+            for dep in "${missing_critical[@]}"; do
+                case "$dep" in
+                    "gcc or clang")
+                        apt_packages+=("build-essential")
+                        dnf_packages+=("gcc" "make")
+                        ;;
+                    *)
+                        apt_packages+=("$dep")
+                        dnf_packages+=("$dep")
+                        ;;
+                esac
+            done
+
             if command -v apt-get &> /dev/null; then
-                print_info "  sudo apt-get install ${missing_critical[*]}"
+                read -p "Would you like to install them using apt-get? (y/n): " -n 1 -r
+                echo
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    print_info "Installing dependencies with apt-get..."
+                    if sudo apt-get update && sudo apt-get install -y ${apt_packages[*]}; then
+                        print_success "Dependencies installed successfully!"
+                        return 0
+                    else
+                        print_error "Some dependencies failed to install"
+                        exit 1
+                    fi
+                fi
+                print_info "Install them with:"
+                print_info "  sudo apt-get update && sudo apt-get install -y ${apt_packages[*]}"
             elif command -v dnf &> /dev/null; then
-                print_info "  sudo dnf install ${missing_critical[*]}"
+                read -p "Would you like to install them using dnf? (y/n): " -n 1 -r
+                echo
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    print_info "Installing dependencies with dnf..."
+                    if sudo dnf install -y ${dnf_packages[*]}; then
+                        print_success "Dependencies installed successfully!"
+                        return 0
+                    else
+                        print_error "Some dependencies failed to install"
+                        exit 1
+                    fi
+                fi
+                print_info "Install them with:"
+                print_info "  sudo dnf install -y ${dnf_packages[*]}"
+            else
+                print_info "Install them manually"
             fi
         fi
         exit 1

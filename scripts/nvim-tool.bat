@@ -228,14 +228,15 @@ if not errorlevel 1 (
 where unzip >nul 2>&1
 if not errorlevel 1 (
     echo [OK] unzip found
-) else (
-    where tar >nul 2>&1
-    if not errorlevel 1 (
-        echo [OK] tar found (can extract archives)
-    ) else (
-        set "MISSING_CRITICAL=!MISSING_CRITICAL! unzip"
-    )
+    goto :unzip_ok
 )
+where tar >nul 2>&1
+if not errorlevel 1 (
+    echo [OK] tar found (can extract archives)
+    goto :unzip_ok
+)
+set "MISSING_CRITICAL=!MISSING_CRITICAL! unzip"
+:unzip_ok
 
 :: Check C compiler
 where gcc >nul 2>&1
@@ -490,31 +491,38 @@ exit /b 0
 
 :check_nvim_installed
 where nvim >nul 2>&1
+if not errorlevel 1 goto :nvim_found
+
+echo [!] Neovim is not installed.
+
+:: Check if winget is available
+where winget >nul 2>&1
 if errorlevel 1 (
-    echo [!] Neovim is not installed.
-
-    :: Check if winget is available
-    where winget >nul 2>&1
-    if not errorlevel 1 (
-        set /p "REPLY=Would you like to install Neovim using winget? (y/n): "
-        if /i "!REPLY!"=="y" (
-            echo Installing Neovim...
-            winget install -e --id Neovim.Neovim --silent --accept-source-agreements --accept-package-agreements
-            if errorlevel 1 (
-                echo [!] Failed to install Neovim
-                echo Please install manually from: https://github.com/neovim/neovim/releases
-                exit /b 0
-            )
-            echo [OK] Neovim installed successfully!
-            echo Please restart your terminal to refresh PATH, then run this script again.
-            exit /b 0
-        )
-    )
-
     echo Please install Neovim from: https://github.com/neovim/neovim/releases
     echo After installation, add it to your PATH and run this script again.
     exit /b 0
 )
+
+set /p "REPLY=Would you like to install Neovim using winget (y/n): "
+if /i not "!REPLY!"=="y" (
+    echo Please install Neovim from: https://github.com/neovim/neovim/releases
+    echo After installation, add it to your PATH and run this script again.
+    exit /b 0
+)
+
+echo Installing Neovim...
+winget install -e --id Neovim.Neovim --silent --accept-source-agreements --accept-package-agreements
+if errorlevel 1 (
+    echo [!] Failed to install Neovim
+    echo Please install manually from: https://github.com/neovim/neovim/releases
+    exit /b 0
+)
+
+echo [OK] Neovim installed successfully!
+echo Please restart your terminal to refresh PATH, then run this script again.
+exit /b 0
+
+:nvim_found
 
 for /f "tokens=*" %%i in ('nvim --version ^| findstr /C:"NVIM"') do (
     echo [OK] Neovim is installed: %%i
@@ -522,38 +530,42 @@ for /f "tokens=*" %%i in ('nvim --version ^| findstr /C:"NVIM"') do (
 exit /b 0
 
 :backup_existing_config
-if exist "%NVIM_CONFIG_DIR%" (
-    :: Check if it's a symlink/junction
-    fsutil reparsepoint query "%NVIM_CONFIG_DIR%" >nul 2>&1
-    if not errorlevel 1 (
-        echo Neovim config is already a symlink
-        for /f "tokens=3" %%i in ('fsutil reparsepoint query "%NVIM_CONFIG_DIR%" ^| findstr /C:"Print Name:"') do (
-            if "%%i"=="%NVIM_SOURCE_DIR%" (
-                echo Neovim config already points to this repository
-                exit /b 0
-            ) else (
-                echo Warning: Neovim config is a symlink to: %%i
-                set /p "REPLY=Remove this symlink and create a new one? (y/n): "
-                if /i not "!REPLY!"=="y" (
-                    echo Error: Cannot proceed without removing existing symlink
-                    exit /b 1
-                )
-                rmdir "%NVIM_CONFIG_DIR%"
-            )
-        )
-    ) else (
-        :: It's a regular directory, back it up
-        for /f "tokens=1-3 delims=/ " %%a in ('echo %date%') do set "DATESTAMP=%%c%%a%%b"
-        for /f "tokens=1-2 delims=:. " %%a in ('echo %time%') do set "TIMESTAMP=%%a%%b"
-        set "BACKUP_DIR=%NVIM_CONFIG_DIR%.backup.%DATESTAMP%_%TIMESTAMP%"
+if not exist "%NVIM_CONFIG_DIR%" exit /b 0
 
-        echo Backing up existing config to !BACKUP_DIR!
-        move "%NVIM_CONFIG_DIR%" "!BACKUP_DIR!" >nul
-        echo Backup created at !BACKUP_DIR!
+:: Check if it's a symlink/junction
+fsutil reparsepoint query "%NVIM_CONFIG_DIR%" >nul 2>&1
+if errorlevel 1 goto :backup_regular_dir
 
-        echo !BACKUP_DIR!> "%REPO_DIR%\.last_backup"
-    )
+echo Neovim config is already a symlink
+for /f "tokens=3" %%i in ('fsutil reparsepoint query "%NVIM_CONFIG_DIR%" ^| findstr /C:"Print Name:"') do (
+    set "LINK_TARGET=%%i"
 )
+
+if "%LINK_TARGET%"=="%NVIM_SOURCE_DIR%" (
+    echo Neovim config already points to this repository
+    exit /b 0
+)
+
+echo Warning: Neovim config is a symlink to: %LINK_TARGET%
+set /p "REPLY=Remove this symlink and create a new one (y/n): "
+if /i not "!REPLY!"=="y" (
+    echo Error: Cannot proceed without removing existing symlink
+    exit /b 1
+)
+rmdir "%NVIM_CONFIG_DIR%"
+exit /b 0
+
+:backup_regular_dir
+:: It's a regular directory, back it up
+for /f "tokens=1-3 delims=/ " %%a in ('echo %date%') do set "DATESTAMP=%%c%%a%%b"
+for /f "tokens=1-2 delims=:. " %%a in ('echo %time%') do set "TIMESTAMP=%%a%%b"
+set "BACKUP_DIR=%NVIM_CONFIG_DIR%.backup.%DATESTAMP%_%TIMESTAMP%"
+
+echo Backing up existing config to !BACKUP_DIR!
+move "%NVIM_CONFIG_DIR%" "!BACKUP_DIR!" >nul
+echo Backup created at !BACKUP_DIR!
+
+echo !BACKUP_DIR!> "%REPO_DIR%\.last_backup"
 exit /b 0
 
 :create_symlink

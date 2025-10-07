@@ -300,30 +300,31 @@ if not "%MISSING_CRITICAL%"=="" (
 
     :: Check if winget is available
     where winget >nul 2>&1
-    if not errorlevel 1 (
-        echo.
-        set /p "REPLY=Would you like to install missing dependencies using winget? (y/n): "
-        if /i "!REPLY!"=="y" (
-            call :install_with_winget
-            if errorlevel 1 (
-                echo Some dependencies could not be installed automatically.
-                call :show_manual_instructions
-                exit /b 1
-            )
-            echo.
-            echo [OK] Dependencies installed successfully!
-            echo Please restart your terminal to refresh PATH, then run this script again.
-            exit /b 0
-        ) else (
-            call :show_manual_instructions
-            exit /b 1
-        )
-    ) else (
+    if errorlevel 1 (
         echo.
         echo [!] winget is not available. Please install dependencies manually:
         call :show_manual_instructions
         exit /b 1
     )
+
+    echo.
+    set /p "REPLY=Would you like to install missing dependencies using winget (y/n): "
+    if /i not "!REPLY!"=="y" (
+        call :show_manual_instructions
+        exit /b 1
+    )
+
+    call :install_with_winget
+    if errorlevel 1 (
+        echo Some dependencies could not be installed automatically.
+        call :show_manual_instructions
+        exit /b 1
+    )
+
+    echo.
+    echo [OK] Dependencies installed successfully!
+    echo Please restart your terminal to refresh PATH, then run this script again.
+    exit /b 0
 )
 
 :: Report optional dependencies
@@ -333,26 +334,29 @@ if not "%MISSING_OPTIONAL%"=="" (
 
     :: Check if winget is available
     where winget >nul 2>&1
-    if not errorlevel 1 (
-        :: Auto-install if requested (during init), otherwise ask
-        if /i "%AUTO_INSTALL_OPTIONAL%"=="auto" (
-            echo Installing optional dependencies with winget...
-            call :install_optional_with_winget
-            echo [OK] Optional dependencies installation complete!
-        ) else (
-            set /p "REPLY=Would you like to install optional dependencies using winget? (y/n): "
-            if /i "!REPLY!"=="y" (
-                call :install_optional_with_winget
-            ) else (
-                echo These are optional but recommended for better performance
-                call :show_optional_manual_instructions
-            )
-        )
+    if errorlevel 1 (
+        echo These are optional but recommended for better performance
+        call :show_optional_manual_instructions
+        goto :end_optional_check
+    )
+
+    :: Auto-install if requested (during init), otherwise ask
+    if /i "%AUTO_INSTALL_OPTIONAL%"=="auto" (
+        echo Installing optional dependencies with winget...
+        call :install_optional_with_winget
+        echo [OK] Optional dependencies installation complete!
+        goto :end_optional_check
+    )
+
+    set /p "REPLY=Would you like to install optional dependencies using winget (y/n): "
+    if /i "!REPLY!"=="y" (
+        call :install_optional_with_winget
     ) else (
         echo These are optional but recommended for better performance
         call :show_optional_manual_instructions
     )
 )
+:end_optional_check
 
 echo.
 echo [OK] All critical dependencies found

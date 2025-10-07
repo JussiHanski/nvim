@@ -232,7 +232,7 @@ if not errorlevel 1 (
 )
 where tar >nul 2>&1
 if not errorlevel 1 (
-    echo [OK] tar found (can extract archives)
+    echo [OK] tar found ^(can extract archives^)
     goto :unzip_ok
 )
 set "MISSING_CRITICAL=!MISSING_CRITICAL! unzip"
@@ -251,7 +251,7 @@ if not errorlevel 1 (
 )
 where cl >nul 2>&1
 if not errorlevel 1 (
-    echo [OK] MSVC (cl.exe) found
+    echo [OK] MSVC ^(cl.exe^) found
     goto :compiler_ok
 )
 set "MISSING_CRITICAL=!MISSING_CRITICAL! gcc/clang/msvc"
@@ -384,7 +384,7 @@ if not errorlevel 1 (
 :: Install make (via MSYS2)
 echo !MISSING_CRITICAL! | findstr /C:"make" >nul
 if not errorlevel 1 (
-    echo Installing MSYS2 (includes make)...
+    echo Installing MSYS2 ^(includes make^)...
     winget install -e --id MSYS2.MSYS2 --silent --accept-source-agreements --accept-package-agreements
     if errorlevel 1 (
         echo [!] Failed to install MSYS2
@@ -448,7 +448,7 @@ if not errorlevel 1 (
 :: Install Rust (includes cargo)
 echo !MISSING_OPTIONAL! | findstr /C:"cargo" >nul
 if not errorlevel 1 (
-    echo Installing Rust (includes cargo)...
+    echo Installing Rust ^(includes cargo^)...
     winget install -e --id Rustlang.Rust.MSVC --silent --accept-source-agreements --accept-package-agreements
     if errorlevel 1 (
         echo [!] Failed to install Rust
@@ -460,7 +460,7 @@ if not errorlevel 1 (
 :: Install Node.js (includes npm)
 echo !MISSING_OPTIONAL! | findstr /C:"node" >nul
 if not errorlevel 1 (
-    echo Installing Node.js (includes npm)...
+    echo Installing Node.js ^(includes npm^)...
     winget install -e --id OpenJS.NodeJS.LTS --silent --accept-source-agreements --accept-package-agreements
     if errorlevel 1 (
         echo [!] Failed to install Node.js

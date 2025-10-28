@@ -1045,28 +1045,33 @@ require('lazy').setup({
     config = function()
       require('claude-code').setup({
         -- Terminal window configuration
-        terminal = {
-          position = 'right', -- 'right', 'left', 'top', 'bottom', 'float'
-          size = math.floor(vim.o.columns * 0.4), -- 40% of screen width
-          float_opts = {
+        window = {
+          position = 'botright vsplit', -- Vertical split on the right
+          split_ratio = 0.4, -- 40% of screen width
+          enter_insert = true,
+          start_in_normal_mode = false,
+          hide_numbers = true,
+          hide_signcolumn = true,
+          float = {
             relative = 'editor',
-            width = 0.8,
-            height = 0.8,
-            row = 0.1,
-            col = 0.1,
+            width = '80%',
+            height = '80%',
+            row = 'center',
+            col = 'center',
             border = 'rounded',
           },
         },
         -- File refresh settings
         refresh = {
-          enabled = true,
-          interval = 1000, -- milliseconds
-          ignored_patterns = { '%.git', 'node_modules', '%.cache' },
+          enable = true,
+          updatetime = 100,
+          timer_interval = 1000,
+          show_notifications = true,
         },
         -- Git integration
         git = {
-          enabled = true,
-          use_project_root = true,
+          use_git_root = true,
+          multi_instance = true,
         },
         -- Keymaps (set to false to disable)
         keymaps = {

@@ -1047,7 +1047,7 @@ require('lazy').setup({
         -- Terminal window configuration
         terminal = {
           position = 'right', -- 'right', 'left', 'top', 'bottom', 'float'
-          size = 80, -- width for vertical, height for horizontal
+          size = math.floor(vim.o.columns * 0.4), -- 40% of screen width
           float_opts = {
             relative = 'editor',
             width = 0.8,

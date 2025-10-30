@@ -865,24 +865,15 @@ require('lazy').setup({
       end, 'Copilot Accept')
 
       map('<M-]>', function()
-        vim.schedule(function()
-          vim.cmd('Copilot next')
-        end)
-        return ''
+        return vim.fn['copilot#Next']()
       end, 'Copilot Next')
 
       map('<M-[>', function()
-        vim.schedule(function()
-          vim.cmd('Copilot previous')
-        end)
-        return ''
+        return vim.fn['copilot#Previous']()
       end, 'Copilot Previous')
 
       map('<M-BS>', function()
-        vim.schedule(function()
-          vim.cmd('Copilot dismiss')
-        end)
-        return ''
+        return vim.fn['copilot#Dismiss']()
       end, 'Copilot Dismiss')
 
       vim.keymap.set('n', '<leader>cp', '<cmd>Copilot panel<cr>', { desc = '[C]opilot [P]anel' })

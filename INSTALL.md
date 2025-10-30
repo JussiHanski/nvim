@@ -42,11 +42,11 @@ Install Homebrew if not already installed:
 - unzip
 - gcc/clang
 - ripgrep
+- node (includes npm)
 
 **Optional (recommended):**
 - fd
 - cargo (Rust)
-- node/npm
 
 **Manual installation if needed:**
 ```bash
@@ -197,11 +197,11 @@ The script supports automatic installation via **winget** (Windows 10 1809+):
 - Make (via MSYS2.MSYS2)
 - Ripgrep (BurntSushi.ripgrep.MSVC)
 - C Compiler (Microsoft.VisualStudio.2022.BuildTools)
+- Node.js (OpenJS.NodeJS.LTS)
 
 **Optional dependencies:**
 - fd (sharkdp.fd)
 - Rust/cargo (Rustlang.Rust.MSVC)
-- Node.js/npm (OpenJS.NodeJS.LTS)
 
 ### Manual Installation (if winget unavailable)
 
@@ -212,7 +212,8 @@ The script supports automatic installation via **winget** (Windows 10 1809+):
    ```
 3. **Ripgrep:** https://github.com/BurntSushi/ripgrep/releases
 4. **Visual Studio Build Tools:** https://visualstudio.microsoft.com/downloads/
-5. **Neovim:** https://github.com/neovim/neovim/releases
+5. **Node.js:** https://nodejs.org/
+6. **Neovim:** https://github.com/neovim/neovim/releases
 
 ### Important Notes for Windows
 

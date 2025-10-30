@@ -70,11 +70,11 @@ The tool creates a symlink from your standard Neovim config location (`~/.config
 - Make
 - C compiler (gcc/clang/MSVC)
 - Ripgrep
+- Node.js (includes npm)
 
 **Optional (recommended):**
 - fd (faster file search)
 - cargo (Rust, for additional plugins)
-- node/npm (for some LSP servers)
 - Claude Code CLI (for AI assistant integration)
 
 The bootstrap script handles dependency installation automatically on all platforms.

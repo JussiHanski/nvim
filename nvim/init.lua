@@ -841,6 +841,54 @@ require('lazy').setup({
     },
   },
 
+  { -- GitHub Copilot inline completion
+    'github/copilot.vim',
+    event = 'InsertEnter',
+    config = function()
+      vim.g.copilot_no_tab_map = true
+      vim.g.copilot_assume_mapped = true
+      vim.g.copilot_filetypes = vim.tbl_extend('force', {
+        ['*'] = true,
+      }, vim.g.copilot_filetypes or {})
+
+      local map = function(lhs, rhs, desc)
+        vim.keymap.set('i', lhs, rhs, {
+          expr = true,
+          silent = true,
+          replace_keycodes = false,
+          desc = desc,
+        })
+      end
+
+      map('<M-l>', function()
+        return vim.fn['copilot#Accept'] ''
+      end, 'Copilot Accept')
+
+      map('<M-]>', function()
+        vim.schedule(function()
+          vim.cmd('Copilot next')
+        end)
+        return ''
+      end, 'Copilot Next')
+
+      map('<M-[>', function()
+        vim.schedule(function()
+          vim.cmd('Copilot previous')
+        end)
+        return ''
+      end, 'Copilot Previous')
+
+      map('<M-BS>', function()
+        vim.schedule(function()
+          vim.cmd('Copilot dismiss')
+        end)
+        return ''
+      end, 'Copilot Dismiss')
+
+      vim.keymap.set('n', '<leader>cp', '<cmd>Copilot panel<cr>', { desc = '[C]opilot [P]anel' })
+    end,
+  },
+
   { -- Autocompletion
     'saghen/blink.cmp',
     event = 'VimEnter',

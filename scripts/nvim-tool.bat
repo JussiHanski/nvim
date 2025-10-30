@@ -280,13 +280,6 @@ if not errorlevel 1 (
     set "MISSING_OPTIONAL=!MISSING_OPTIONAL! cargo"
 )
 
-where node >nul 2>&1
-if not errorlevel 1 (
-    echo [OK] node found
-) else (
-    set "MISSING_OPTIONAL=!MISSING_OPTIONAL! node"
-)
-
 where npm >nul 2>&1
 if not errorlevel 1 (
     echo [OK] npm found
@@ -454,18 +447,6 @@ if not errorlevel 1 (
         echo [!] Failed to install Rust
     ) else (
         echo [OK] Rust installed
-    )
-)
-
-:: Install Node.js (includes npm)
-echo !MISSING_OPTIONAL! | findstr /C:"node" >nul
-if not errorlevel 1 (
-    echo Installing Node.js ^(includes npm^)...
-    winget install -e --id OpenJS.NodeJS.LTS --silent --accept-source-agreements --accept-package-agreements
-    if errorlevel 1 (
-        echo [!] Failed to install Node.js
-    ) else (
-        echo [OK] Node.js installed
     )
 )
 

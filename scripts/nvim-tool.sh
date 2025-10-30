@@ -48,11 +48,15 @@ check_dependencies() {
     local missing_optional=()
 
     # Critical dependencies
-    for dep in git make unzip; do
+    for dep in git make unzip node; do
         if ! command -v "$dep" &> /dev/null; then
             missing_critical+=("$dep")
         else
-            print_success "$dep found"
+            if [ "$dep" = "node" ]; then
+                print_success "node found ($(node --version))"
+            else
+                print_success "$dep found"
+            fi
         fi
     done
 
@@ -75,7 +79,7 @@ check_dependencies() {
     fi
 
     # Optional dependencies
-    for dep in fd cargo node npm; do
+    for dep in fd cargo npm; do
         if ! command -v "$dep" &> /dev/null; then
             missing_optional+=("$dep")
         else
@@ -114,6 +118,10 @@ check_dependencies() {
                     "gcc or clang")
                         apt_packages+=("build-essential")
                         dnf_packages+=("gcc" "make")
+                        ;;
+                    node)
+                        apt_packages+=("nodejs")
+                        dnf_packages+=("nodejs")
                         ;;
                     *)
                         apt_packages+=("$dep")

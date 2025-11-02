@@ -1,11 +1,17 @@
 -- Neo-tree - File explorer for navigation
--- A traditional sidebar file explorer with Git integration, LSP diagnostics,
--- fuzzy finding, and multiple view modes (filesystem, buffers, git status).
+-- A netrw-style file explorer that opens in the current window.
+-- Features Git integration, LSP diagnostics, fuzzy finding, and multiple
+-- view modes (filesystem, buffers, git status).
+--
+-- Behavior:
+--   - Opens in the current window (like netrw)
+--   - Replaces netrw when opening directories
+--   - Navigate with j/k, Enter to open files/folders
 --
 -- Keybindings:
---   <leader>e  : Toggle file explorer
---   <leader>be : Toggle buffer explorer
---   <leader>ge : Toggle git status explorer
+--   <leader>e  : Open file explorer in current window
+--   <leader>be : Open buffer explorer
+--   <leader>ge : Open git status explorer
 --
 -- Inside Neo-tree:
 --   <CR> or <Space> : Open file/expand folder
@@ -18,6 +24,8 @@
 --   y/x/p           : Copy/Cut/Paste to clipboard
 --   H               : Toggle hidden files
 --   /               : Fuzzy finder
+--   -               : Navigate to parent directory
+--   .               : Set current dir as root
 --   ?               : Show all keybindings
 
 return {
@@ -30,9 +38,9 @@ return {
   },
   cmd = 'Neotree',
   keys = {
-    { '<leader>e', '<cmd>Neotree toggle<cr>', desc = 'Toggle [E]xplorer (Neo-tree)' },
-    { '<leader>be', '<cmd>Neotree toggle buffers<cr>', desc = '[B]uffers [E]xplorer' },
-    { '<leader>ge', '<cmd>Neotree toggle git_status<cr>', desc = '[G]it [E]xplorer' },
+    { '<leader>e', '<cmd>Neotree toggle<cr>', desc = 'Open file [E]xplorer in current window' },
+    { '<leader>be', '<cmd>Neotree toggle buffers<cr>', desc = 'Open [B]uffer [E]xplorer' },
+    { '<leader>ge', '<cmd>Neotree toggle git_status<cr>', desc = 'Open [G]it status [E]xplorer' },
   },
   config = function()
     require('neo-tree').setup {
@@ -87,8 +95,8 @@ return {
       },
 
       window = {
-        position = 'left',
-        width = 35,
+        -- Open in current window (like netrw) instead of sidebar
+        position = 'current',
         mapping_options = {
           noremap = true,
           nowait = true,
@@ -161,7 +169,8 @@ return {
           leave_dirs_open = false,
         },
         group_empty_dirs = false,
-        hijack_netrw_behavior = 'open_default',
+        -- Replace netrw and open in current window
+        hijack_netrw_behavior = 'open_current',
         use_libuv_file_watcher = false,
         window = {
           mappings = {

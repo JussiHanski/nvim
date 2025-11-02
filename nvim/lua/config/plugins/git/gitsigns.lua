@@ -41,103 +41,114 @@
 return {
   'lewis6991/gitsigns.nvim',
 
-  opts = {
-    -- ========================================================================
-    -- Sign Configuration
-    -- ========================================================================
+  config = function()
+    -- Setup gitsigns
+    require('gitsigns').setup {
+      -- ======================================================================
+      -- Sign Configuration
+      -- ======================================================================
 
-    signs = {
-      -- Characters displayed in the sign column
-      add = { text = '+' }, -- Line added
-      change = { text = '~' }, -- Line changed
-      delete = { text = '_' }, -- Line deleted
-      topdelete = { text = '‾' }, -- Top of deleted block
-      changedelete = { text = '~' }, -- Line changed and deleted
-    },
+      signs = {
+        -- Characters displayed in the sign column
+        add = { text = '+' }, -- Line added
+        change = { text = '~' }, -- Line changed
+        delete = { text = '_' }, -- Line deleted
+        topdelete = { text = '‾' }, -- Top of deleted block
+        changedelete = { text = '~' }, -- Line changed and deleted
+      },
 
-    -- ========================================================================
-    -- Keybindings for Hunk Operations
-    -- ========================================================================
+      -- ======================================================================
+      -- Keybindings for Hunk Operations
+      -- ======================================================================
 
-    on_attach = function(bufnr)
-      local gs = package.loaded.gitsigns
+      on_attach = function(bufnr)
+        local gs = package.loaded.gitsigns
 
-      -- Navigation between hunks
-      vim.keymap.set('n', ']h', gs.next_hunk, { buffer = bufnr, desc = 'Next git [H]unk' })
-      vim.keymap.set('n', '[h', gs.prev_hunk, { buffer = bufnr, desc = 'Previous git [H]unk' })
+        -- Navigation between hunks
+        vim.keymap.set('n', ']h', gs.next_hunk, { buffer = bufnr, desc = 'Next git [H]unk' })
+        vim.keymap.set('n', '[h', gs.prev_hunk, { buffer = bufnr, desc = 'Previous git [H]unk' })
 
-      -- Hunk actions
-      vim.keymap.set('n', '<leader>hs', gs.stage_hunk, { buffer = bufnr, desc = '[H]unk [S]tage' })
-      vim.keymap.set('v', '<leader>hs', function()
-        gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
-      end, { buffer = bufnr, desc = '[H]unk [S]tage (selection)' })
-      vim.keymap.set('n', '<leader>hr', gs.reset_hunk, { buffer = bufnr, desc = '[H]unk [R]eset' })
-      vim.keymap.set('v', '<leader>hr', function()
-        gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
-      end, { buffer = bufnr, desc = '[H]unk [R]eset (selection)' })
-      vim.keymap.set('n', '<leader>hS', gs.stage_buffer, { buffer = bufnr, desc = '[H]unk [S]tage buffer' })
-      vim.keymap.set('n', '<leader>hu', gs.undo_stage_hunk, { buffer = bufnr, desc = '[H]unk [U]ndo stage' })
-      vim.keymap.set('n', '<leader>hR', gs.reset_buffer, { buffer = bufnr, desc = '[H]unk [R]eset buffer' })
-      vim.keymap.set('n', '<leader>hp', gs.preview_hunk, { buffer = bufnr, desc = '[H]unk [P]review' })
-      vim.keymap.set('n', '<leader>hb', function()
-        gs.blame_line { full = true }
-      end, { buffer = bufnr, desc = '[H]unk [B]lame line' })
-      vim.keymap.set('n', '<leader>hd', gs.diffthis, { buffer = bufnr, desc = '[H]unk [D]iff this' })
-      vim.keymap.set('n', '<leader>hD', function()
-        gs.diffthis '~'
-      end, { buffer = bufnr, desc = '[H]unk [D]iff this ~' })
+        -- Hunk actions
+        vim.keymap.set('n', '<leader>hs', gs.stage_hunk, { buffer = bufnr, desc = '[H]unk [S]tage' })
+        vim.keymap.set('v', '<leader>hs', function()
+          gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
+        end, { buffer = bufnr, desc = '[H]unk [S]tage (selection)' })
+        vim.keymap.set('n', '<leader>hr', gs.reset_hunk, { buffer = bufnr, desc = '[H]unk [R]eset' })
+        vim.keymap.set('v', '<leader>hr', function()
+          gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
+        end, { buffer = bufnr, desc = '[H]unk [R]eset (selection)' })
+        vim.keymap.set('n', '<leader>hS', gs.stage_buffer, { buffer = bufnr, desc = '[H]unk [S]tage buffer' })
+        vim.keymap.set('n', '<leader>hu', gs.undo_stage_hunk, { buffer = bufnr, desc = '[H]unk [U]ndo stage' })
+        vim.keymap.set('n', '<leader>hR', gs.reset_buffer, { buffer = bufnr, desc = '[H]unk [R]eset buffer' })
+        vim.keymap.set('n', '<leader>hp', gs.preview_hunk, { buffer = bufnr, desc = '[H]unk [P]review' })
+        vim.keymap.set('n', '<leader>hb', function()
+          gs.blame_line { full = true }
+        end, { buffer = bufnr, desc = '[H]unk [B]lame line' })
+        vim.keymap.set('n', '<leader>hd', gs.diffthis, { buffer = bufnr, desc = '[H]unk [D]iff this' })
+        vim.keymap.set('n', '<leader>hD', function()
+          gs.diffthis '~'
+        end, { buffer = bufnr, desc = '[H]unk [D]iff this ~' })
 
-      -- Toggle options
-      vim.keymap.set('n', '<leader>tb', gs.toggle_current_line_blame, { buffer = bufnr, desc = '[T]oggle git [B]lame' })
-      vim.keymap.set('n', '<leader>td', gs.toggle_deleted, { buffer = bufnr, desc = '[T]oggle [D]eleted lines' })
+        -- Full file blame
+        vim.keymap.set('n', '<leader>hB', function()
+          gs.blame()
+        end, { buffer = bufnr, desc = '[H]unk [B]lame buffer (full file)' })
 
-      -- Text object for hunks
-      vim.keymap.set({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>', { buffer = bufnr, desc = 'Select hunk' })
-    end,
+        -- Toggle options
+        vim.keymap.set('n', '<leader>tb', gs.toggle_current_line_blame, { buffer = bufnr, desc = '[T]oggle git [B]lame' })
+        vim.keymap.set('n', '<leader>td', gs.toggle_deleted, { buffer = bufnr, desc = '[T]oggle [D]eleted lines' })
 
-    -- ========================================================================
-    -- Additional Configuration
-    -- ========================================================================
+        -- Text object for hunks
+        vim.keymap.set({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>', { buffer = bufnr, desc = 'Select hunk' })
+      end,
 
-    -- Show current line blame by default (like VS Code GitLens)
-    current_line_blame = false, -- Set to true to enable by default
+      -- ======================================================================
+      -- Additional Configuration
+      -- ======================================================================
 
-    -- Blame line options
-    current_line_blame_opts = {
-      virt_text = true,
-      virt_text_pos = 'eol', -- 'eol' | 'overlay' | 'right_align'
-      delay = 1000, -- Delay before showing (ms)
-      ignore_whitespace = false,
-    },
+      -- Show current line blame by default (like VS Code GitLens)
+      current_line_blame = true, -- Set to true to enable by default
 
-    -- Blame line format
-    current_line_blame_formatter = '<author>, <author_time:%Y-%m-%d> - <summary>',
+      -- Blame line options
+      current_line_blame_opts = {
+        virt_text = true,
+        virt_text_pos = 'eol', -- 'eol' | 'overlay' | 'right_align'
+        delay = 1000, -- Delay before showing (ms)
+        ignore_whitespace = false,
+      },
 
-    -- Show deleted lines
-    show_deleted = false,
+      -- Blame line format
+      current_line_blame_formatter = '<author>, <author_time:%Y-%m-%d> - <summary>',
 
-    -- Word diff highlighting
-    word_diff = false,
+      -- Show deleted lines
+      show_deleted = false,
 
-    -- Watch git dir for changes
-    watch_gitdir = {
-      interval = 1000,
-      follow_files = true,
-    },
+      -- Word diff highlighting
+      word_diff = false,
 
-    -- Attach to untracked files
-    attach_to_untracked = true,
+      -- Watch git dir for changes
+      watch_gitdir = {
+        interval = 1000,
+        follow_files = true,
+      },
 
-    -- Update debounce
-    update_debounce = 100,
+      -- Attach to untracked files
+      attach_to_untracked = true,
 
-    -- Maximum file length to attach (performance)
-    max_file_length = 40000,
+      -- Update debounce
+      update_debounce = 100,
 
-    -- Sign priority
-    sign_priority = 6,
+      -- Maximum file length to attach (performance)
+      max_file_length = 40000,
 
-    -- Status line integration
-    status_formatter = nil, -- Use default
-  },
+      -- Sign priority
+      sign_priority = 6,
+
+      -- Status line integration
+      status_formatter = nil, -- Use default
+    }
+
+    -- Make blame text brighter and more visible
+    vim.api.nvim_set_hl(0, 'GitSignsCurrentLineBlame', { fg = '#7aa2f7', italic = true })
+  end,
 }

@@ -80,10 +80,19 @@ check_dependencies() {
 
     # Optional dependencies
     for dep in fd cargo npm; do
-        if ! command -v "$dep" &> /dev/null; then
-            missing_optional+=("$dep")
+        # Special handling for fd (called fdfind on Ubuntu/Debian)
+        if [ "$dep" = "fd" ]; then
+            if command -v fd &> /dev/null || command -v fdfind &> /dev/null; then
+                print_success "fd found"
+            else
+                missing_optional+=("$dep")
+            fi
         else
-            print_success "$dep found"
+            if ! command -v "$dep" &> /dev/null; then
+                missing_optional+=("$dep")
+            else
+                print_success "$dep found"
+            fi
         fi
     done
 
@@ -234,15 +243,29 @@ check_dependencies() {
                 # Auto-install if requested (during init), otherwise ask
                 if [ "$auto_install_optional" = "true" ]; then
                     print_info "Installing optional dependencies with apt-get..."
-                    sudo apt-get install -y ${apt_packages[*]}
-                    print_success "Optional dependencies installation complete!"
+                    if sudo apt-get install -y ${apt_packages[*]} 2>&1; then
+                        print_success "Optional dependencies installation complete!"
+                    else
+                        print_warning "apt-get encountered errors (may be due to unrelated package issues)"
+                        print_info "If you see dpkg errors unrelated to these packages, fix them first:"
+                        print_info "  sudo dpkg --configure -a"
+                        print_info "Then try installing optional dependencies manually:"
+                        print_info "  sudo apt-get install -y ${apt_packages[*]}"
+                    fi
                 else
                     read -p "Would you like to install them using apt-get? (y/n): " -n 1 -r
                     echo
                     if [[ $REPLY =~ ^[Yy]$ ]]; then
                         print_info "Installing optional dependencies with apt-get..."
-                        sudo apt-get install -y ${apt_packages[*]}
-                        print_success "Optional dependencies installation complete!"
+                        if sudo apt-get install -y ${apt_packages[*]} 2>&1; then
+                            print_success "Optional dependencies installation complete!"
+                        else
+                            print_warning "apt-get encountered errors (may be due to unrelated package issues)"
+                            print_info "If you see dpkg errors unrelated to these packages, fix them first:"
+                            print_info "  sudo dpkg --configure -a"
+                            print_info "Then try installing optional dependencies manually:"
+                            print_info "  sudo apt-get install -y ${apt_packages[*]}"
+                        fi
                     else
                         print_info "You can install them later with:"
                         print_info "  sudo apt-get install -y ${apt_packages[*]}"

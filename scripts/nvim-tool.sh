@@ -392,17 +392,22 @@ install_neovim() {
         if command -v apt-get &> /dev/null; then
             print_warning "Ubuntu/Debian default repos may have old Neovim (0.10.x)"
             echo "Options:"
-            echo "  1) Install via AppImage (recommended, latest version)"
-            echo "  2) Install from default repo (may be old)"
-            read -p "Choose option (1-2): " -n 1 -r
+            echo "  1) Build from source (recommended for WSL/Ubuntu, latest stable)"
+            echo "  2) Install via AppImage (latest version, self-contained)"
+            echo "  3) Install from default repo (may be old)"
+            read -p "Choose option (1-3): " -n 1 -r
             echo
 
             case $REPLY in
                 1)
-                    install_neovim_appimage
+                    install_neovim_from_source
                     return $?
                     ;;
                 2)
+                    install_neovim_appimage
+                    return $?
+                    ;;
+                3)
                     sudo apt-get update && sudo apt-get install -y neovim
                     ;;
                 *)
@@ -467,24 +472,29 @@ upgrade_neovim() {
         if command -v apt-get &> /dev/null; then
             print_warning "Ubuntu/Debian default repos may not have Neovim 0.11+"
             echo "Options:"
-            echo "  1) Install via AppImage (recommended, self-contained)"
-            echo "  2) Try unstable PPA (may have newer version)"
-            echo "  3) Try apt upgrade (likely still old)"
-            read -p "Choose option (1-3): " -n 1 -r
+            echo "  1) Build from source (recommended for WSL/Ubuntu, latest stable)"
+            echo "  2) Install via AppImage (latest version, self-contained)"
+            echo "  3) Try unstable PPA (may have newer version)"
+            echo "  4) Try apt upgrade (likely still old)"
+            read -p "Choose option (1-4): " -n 1 -r
             echo
 
             case $REPLY in
                 1)
-                    install_neovim_appimage
+                    install_neovim_from_source
                     return $?
                     ;;
                 2)
+                    install_neovim_appimage
+                    return $?
+                    ;;
+                3)
                     print_info "Adding Neovim unstable PPA..."
                     sudo add-apt-repository -y ppa:neovim-ppa/unstable
                     sudo apt-get update
                     sudo apt-get install -y neovim
                     ;;
-                3)
+                4)
                     sudo apt-get update && sudo apt-get install -y --only-upgrade neovim
                     ;;
                 *)
@@ -516,6 +526,86 @@ upgrade_neovim() {
         print_warning "Upgrade completed but version is still < 0.11"
         print_info "Consider installing Homebrew or using AppImage"
     fi
+}
+
+install_neovim_from_source() {
+    print_info "Building Neovim from source..."
+
+    local build_deps_installed=false
+    local nvim_repo="/tmp/neovim_build_$$"
+
+    # Install build dependencies
+    print_info "Installing build dependencies..."
+    if command -v apt-get &> /dev/null; then
+        if sudo apt-get install -y ninja-build gettext cmake unzip curl build-essential; then
+            build_deps_installed=true
+        fi
+    elif command -v dnf &> /dev/null; then
+        if sudo dnf install -y ninja-build cmake gcc make unzip gettext curl; then
+            build_deps_installed=true
+        fi
+    else
+        print_error "Unsupported package manager for automatic dependency installation"
+        return 1
+    fi
+
+    if [ "$build_deps_installed" = false ]; then
+        print_error "Failed to install build dependencies"
+        return 1
+    fi
+
+    # Clone Neovim repository
+    print_info "Cloning Neovim repository..."
+    if ! git clone https://github.com/neovim/neovim.git "$nvim_repo"; then
+        print_error "Failed to clone Neovim repository"
+        return 1
+    fi
+
+    cd "$nvim_repo"
+
+    # Get latest stable tag
+    print_info "Finding latest stable release..."
+    local latest_tag=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | grep -v 'rc' | sort -V | tail -n1)
+
+    if [ -z "$latest_tag" ]; then
+        print_error "Could not determine latest stable version"
+        cd -
+        rm -rf "$nvim_repo"
+        return 1
+    fi
+
+    print_info "Checking out stable version $latest_tag..."
+    if ! git checkout "$latest_tag"; then
+        print_error "Failed to checkout $latest_tag"
+        cd -
+        rm -rf "$nvim_repo"
+        return 1
+    fi
+
+    # Build
+    print_info "Building Neovim (this may take a few minutes)..."
+    if ! make CMAKE_BUILD_TYPE=Release; then
+        print_error "Build failed"
+        cd -
+        rm -rf "$nvim_repo"
+        return 1
+    fi
+
+    # Install
+    print_info "Installing Neovim..."
+    if ! sudo make install; then
+        print_error "Installation failed"
+        cd -
+        rm -rf "$nvim_repo"
+        return 1
+    fi
+
+    # Cleanup
+    cd -
+    rm -rf "$nvim_repo"
+
+    print_success "Neovim built and installed from source: $(nvim --version | head -n 1)"
+    return 0
 }
 
 install_neovim_appimage() {

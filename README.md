@@ -42,7 +42,43 @@ bootstrap.bat init
 - Backs up existing Neovim config
 - Creates symlinks/junctions to use this config
 - Auto-installs dependencies and plugins
-- Installs Neovim 0.11+ if missing
+- Installs Neovim 0.11+ if missing (offers multiple installation methods, see below)
+
+## Neovim Installation
+
+The tool intelligently handles Neovim installation based on your operating system:
+
+### Ubuntu/Debian/WSL
+
+When installing or upgrading Neovim, you'll be prompted with these options:
+
+1. **Build from source** (recommended for WSL/Ubuntu)
+   - Automatically installs build dependencies
+   - Downloads and builds the latest stable release
+   - Ensures you always get the most recent version
+   - Installation process:
+     ```bash
+     # Build dependencies are auto-installed:
+     sudo apt-get install ninja-build gettext cmake unzip curl build-essential
+
+     # Then the script automatically:
+     # - Clones neovim repository
+     # - Checks out latest stable tag
+     # - Builds with: make CMAKE_BUILD_TYPE=Release
+     # - Installs to /usr/local/bin/nvim
+     ```
+
+2. **AppImage** - Self-contained binary, latest version
+3. **Default repository** - May be outdated (usually 0.10.x on Ubuntu)
+4. **Unstable PPA** - More recent, but potentially unstable
+
+### macOS
+
+- **Homebrew** - Automatically installed if missing
+
+### Fedora/Arch
+
+- **Package manager** - Uses dnf or pacman (usually up-to-date)
 
 ### Update Configuration
 

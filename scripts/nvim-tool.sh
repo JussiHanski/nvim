@@ -752,7 +752,13 @@ cmd_init() {
     fi
 
     backup_existing_config
-    create_symlink
+
+    if [ -L "$NVIM_CONFIG_DIR" ] && [ "$(readlink "$NVIM_CONFIG_DIR")" = "$NVIM_SOURCE_DIR" ]; then
+        print_info "Neovim config already points to this repository"
+    else
+        create_symlink
+    fi
+
     install_plugins
 
     print_success "Initialization complete!"

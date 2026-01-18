@@ -11,7 +11,17 @@ NC='\033[0m' # No Color
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
-NVIM_SOURCE_DIR="$REPO_DIR/nvim"
+NVIM_SOURCE_DIR=""
+
+# Resolve the Neovim source directory based on repository layout
+if [ -f "$REPO_DIR/init.lua" ]; then
+    NVIM_SOURCE_DIR="$REPO_DIR"
+elif [ -f "$REPO_DIR/nvim/init.lua" ]; then
+    NVIM_SOURCE_DIR="$REPO_DIR/nvim"
+else
+    echo "Error: Neovim config not found. Expected init.lua at $REPO_DIR or $REPO_DIR/nvim" >&2
+    exit 1
+fi
 
 # Determine Neovim config directory based on OS
 if [[ "$OSTYPE" == "darwin"* ]] || [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -680,6 +690,30 @@ backup_existing_config() {
 }
 
 create_symlink() {
+    local resolved_source
+    local resolved_target
+    local resolved_config
+
+    if command -v realpath &> /dev/null; then
+        resolved_source=$(realpath "$NVIM_SOURCE_DIR")
+        resolved_target=$(realpath "$(dirname "$NVIM_CONFIG_DIR")")
+        resolved_config=$(realpath "$NVIM_CONFIG_DIR" 2>/dev/null || true)
+    else
+        resolved_source=$(readlink -f "$NVIM_SOURCE_DIR")
+        resolved_target=$(readlink -f "$(dirname "$NVIM_CONFIG_DIR")")
+        resolved_config=$(readlink -f "$NVIM_CONFIG_DIR" 2>/dev/null || true)
+    fi
+
+    if [[ -n "$resolved_config" && "$resolved_source" == "$resolved_config"* ]]; then
+        print_error "Refusing to create a nested config: $NVIM_SOURCE_DIR is inside $NVIM_CONFIG_DIR"
+        exit 1
+    fi
+
+    if [[ "$resolved_source" == "$resolved_target"* ]]; then
+        print_error "Refusing to create a nested config: $NVIM_SOURCE_DIR is inside $(dirname "$NVIM_CONFIG_DIR")"
+        exit 1
+    fi
+
     print_info "Creating symlink: $NVIM_CONFIG_DIR -> $NVIM_SOURCE_DIR"
 
     # Create parent directory if it doesn't exist

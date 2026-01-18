@@ -10,6 +10,7 @@ NC='\033[0m' # No Color
 # Configuration
 REPO_URL="https://github.com/JussiHanski/nvim.git"
 INSTALL_DIR="$HOME/.config/nvim_config_tool"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOOL_SCRIPT="$INSTALL_DIR/scripts/nvim-tool.sh"
 
 # Helper functions
@@ -29,6 +30,13 @@ check_git() {
     if ! command -v git &> /dev/null; then
         print_error "Git is not installed. Please install git first."
         exit 1
+    fi
+}
+
+resolve_tool_script() {
+    if [ -f "$SCRIPT_DIR/scripts/nvim-tool.sh" ]; then
+        TOOL_SCRIPT="$SCRIPT_DIR/scripts/nvim-tool.sh"
+        INSTALL_DIR="$SCRIPT_DIR"
     fi
 }
 
@@ -95,10 +103,12 @@ main() {
     case "$command" in
         init|update|clean|status)
             check_git
+            resolve_tool_script
 
-            # Clone or update repo if running init
-            if [ "$command" = "init" ]; then
+            # Clone or update repo if running init and not already in repo
+            if [ "$command" = "init" ] && [ "$TOOL_SCRIPT" = "$INSTALL_DIR/scripts/nvim-tool.sh" ]; then
                 clone_or_update_repo
+                resolve_tool_script
             fi
 
             # Check if tool script exists

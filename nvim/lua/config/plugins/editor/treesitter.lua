@@ -44,8 +44,14 @@ return {
   -- Run :TSUpdate after installation or update
   build = ':TSUpdate',
 
-  -- Use nvim-treesitter.configs as the main module for setup
-  main = 'nvim-treesitter.configs',
+  config = function(_, opts)
+    local ok, configs = pcall(require, 'nvim-treesitter.configs')
+    if not ok then
+      return
+    end
+
+    configs.setup(opts)
+  end,
 
   opts = {
     -- ========================================================================
